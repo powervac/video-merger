@@ -1,0 +1,14 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+Thumbs.db
+
+# видео и фото в репозиторий не попадают
+*.mp4
+*.MP4
+*.mov
+*.MOV
+*.mkv
+*.jpg
+*.JPG

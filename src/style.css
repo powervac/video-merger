@@ -1,0 +1,243 @@
+:root {
+  --bg: #1b202a;
+  --chrome: #1e232e;
+  --panel: #242a36;
+  --card: #2a303d;
+  --field: #323948;
+  --line: #3a4252;
+  --text: #eef1f7;
+  --muted: #98a2b5;
+  --accent: #1f7aef;
+  --accent-dark: #1160cc;
+  --warn: #f0b35a;
+  --bad: #ff7a7a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.35 "Segoe UI", system-ui, -apple-system, sans-serif;
+  user-select: none;
+  overflow: hidden;
+}
+.sprite { display: none; }
+svg { width: 1.25em; height: 1.25em; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+symbol .fill { fill: currentColor; stroke: none; }
+button, select { font: inherit; color: inherit; }
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--field);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: .45; cursor: default; }
+button.primary { background: var(--accent); border-color: var(--accent); }
+button.ghost, button.link { background: none; border-color: transparent; }
+h2 { margin: 0; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 12px; }
+.muted { color: var(--muted); }
+.selectable { user-select: text; overflow-wrap: anywhere; white-space: pre-line; }
+.spacer { flex: 1; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+
+/* ---------- шапка и меню ---------- */
+.titlebar {
+  height: 56px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  padding-left: 32px;
+  background: var(--chrome);
+  border-bottom: 1px solid var(--line);
+  font-size: 19px;
+  font-weight: 600;
+  -webkit-app-region: drag;
+}
+.logo { width: 38px; height: 38px; stroke: none; fill: var(--accent); }
+.logo .cut { fill: var(--chrome); }
+.winbuttons { margin-left: auto; display: flex; align-self: stretch; -webkit-app-region: no-drag; }
+.winbuttons button { width: 62px; background: none; border: 0; border-radius: 0; color: var(--muted); }
+.winbuttons button:hover { background: var(--field); }
+.winbuttons .closer:hover { background: #d9363e; color: #fff; }
+.winbuttons svg { width: 20px; height: 20px; stroke-width: 1.5; }
+body.mac .winbuttons { display: none; }
+body.mac .titlebar { padding-left: 90px; gap: 14px; }
+
+.app { flex: 1; min-height: 0; display: flex; }
+nav { width: 122px; flex: none; display: flex; flex-direction: column; gap: 22px; padding: 20px 10px; background: var(--chrome); border-right: 1px solid var(--line); }
+nav button { flex-direction: column; gap: 8px; height: 102px; background: none; border-color: transparent; color: var(--muted); }
+nav button svg { width: 38px; height: 38px; }
+nav button.active { background: linear-gradient(160deg, var(--accent), var(--accent-dark)); color: #fff; }
+.content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.view { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+#view-merge { padding: 14px 18px 14px; gap: 12px; }
+
+/* ---------- верх: файлы и настройки ---------- */
+.top { flex: 1; min-height: 0; display: flex; gap: 26px; }
+.left { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.right { width: clamp(380px, 38vw, 562px); flex: none; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+
+#dropzone {
+  flex: none;
+  height: clamp(110px, 18vh, 178px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 44px;
+  border: 2px dashed #566077;
+  border-radius: 10px;
+  cursor: pointer;
+}
+#dropzone:hover, #dropzone.over { border-color: var(--accent); background: rgba(31, 122, 239, .07); }
+.dropicon { width: 138px; height: 78%; stroke: none; }
+.droptitle { font-size: clamp(22px, 2.3vw, 34px); }
+.dropsub { color: var(--muted); font-size: 18px; margin-top: 6px; }
+button.link { padding: 4px 0; margin-top: 4px; color: #6aa9ff; font-size: 14px; }
+
+.listhead { display: flex; align-items: center; justify-content: space-between; }
+#list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+#list:empty::after { content: "No videos yet"; margin: auto; color: var(--muted); }
+.item {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  height: 91px;
+  padding: 0 20px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: grab;
+}
+.item.selected { border-color: var(--accent); }
+.item.dragging, .clip.dragging { opacity: .35; }
+.item.before { box-shadow: 0 -4px 0 var(--accent); }
+.item.after { box-shadow: 0 4px 0 var(--accent); }
+.grip { width: 14px; height: 22px; flex: none; background: radial-gradient(circle, var(--muted) 2.2px, transparent 2.8px) 0 0 / 7px 8px; }
+.thumb { width: 111px; height: 69px; flex: none; border-radius: 4px; background: #10131a; object-fit: cover; display: grid; place-items: center; color: var(--muted); }
+.item .text { flex: 1; min-width: 0; }
+.item .name { font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item .meta { color: var(--muted); margin-top: 5px; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item .meta.error { color: var(--bad); white-space: normal; }
+.pill { flex: none; padding: 8px 17px; border: 1px solid var(--line); border-radius: 22px; font-variant-numeric: tabular-nums; }
+.item .remove { flex: none; padding: 6px; background: none; border-color: transparent; color: var(--muted); }
+.item .remove svg { width: 22px; height: 22px; }
+
+/* ---------- плеер ---------- */
+.player { flex: 1 1 0; min-height: 150px; display: flex; flex-direction: column; background: var(--panel); border-radius: 8px; overflow: hidden; }
+.screen { flex: 1; min-height: 0; position: relative; background: #0d1016; }
+#video { width: 100%; height: 100%; object-fit: contain; display: block; }
+#playerNote { position: absolute; left: 10px; right: 10px; bottom: 8px; text-align: center; color: var(--muted); pointer-events: none; }
+#bigPlay { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: 90px; height: 90px; border: 0; border-radius: 50%; background: rgba(20, 22, 28, .65); color: #fff; }
+#bigPlay svg { width: 44px; height: 44px; margin-left: 6px; }
+.controls { flex: none; display: flex; align-items: center; gap: 16px; height: 48px; padding: 0 16px; }
+.controls button { background: none; border: 0; padding: 4px; }
+.controls svg { width: 22px; height: 22px; }
+#clock { font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fullscreen-on { border-radius: 0; }
+
+input[type="range"] { -webkit-appearance: none; flex: 1; min-width: 0; height: 18px; margin: 0; background: none; cursor: pointer; --fill: 0%; }
+input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--accent) var(--fill), var(--line) var(--fill)); }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 17px; height: 17px; margin-top: -5.5px; border-radius: 50%; background: var(--accent); }
+
+/* ---------- настройки вывода ---------- */
+.output { flex: none; padding: 14px 18px 12px; display: flex; flex-direction: column; gap: 8px; }
+.row { display: grid; grid-template-columns: 38% 1fr; align-items: center; min-height: 36px; }
+.row label { color: #c9d0de; }
+select { width: 100%; height: 36px; padding: 0 12px; background: var(--field); border: 1px solid var(--line); border-radius: 7px; }
+.withicon { position: relative; }
+.withicon > svg { position: absolute; left: 14px; top: 8px; width: 20px; height: 20px; pointer-events: none; }
+.withicon select { padding-left: 48px; }
+.slider { display: flex; align-items: center; gap: 16px; }
+.slider span { width: 64px; text-align: right; }
+.folder { display: flex; gap: 14px; min-width: 0; }
+.path { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 0 14px; height: 36px; background: var(--card); border-radius: 7px; color: var(--muted); font-size: 14px; }
+.path span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#hint { font-size: 12.5px; color: var(--muted); min-height: 17px; }
+#hint.warn { color: var(--warn); }
+
+/* ---------- таймлайн ---------- */
+.timeline { flex: none; overflow: hidden; }
+.tlhead { height: 46px; display: flex; align-items: center; gap: 20px; padding: 0 18px; font-size: 14px; color: #c9d0de; border-bottom: 1px solid var(--line); }
+.tlhead .layers { width: 26px; height: 26px; }
+.tlhead .sep { padding-left: 18px; border-left: 1px solid var(--line); }
+.tlhead .size { display: flex; align-items: center; gap: 8px; margin-left: 14px; }
+.tlhead .size svg { width: 22px; height: 22px; }
+.tlbody { display: flex; padding-bottom: 8px; }
+.trackicons { width: 66px; flex: none; display: flex; flex-direction: column; color: var(--muted); }
+.trackicons div { display: grid; place-items: center; }
+.trackicons div:first-child { height: 22px; }
+.trackicons .v { height: 90px; background: var(--card); }
+.trackicons .a { height: 48px; margin-top: 4px; background: var(--card); }
+.trackicons svg { width: 28px; height: 28px; }
+#scroller { flex: 1; min-width: 0; overflow-x: auto; overflow-y: hidden; }
+#tracks { position: relative; min-width: 100%; width: max-content; padding-left: 24px; }
+#ruler { display: block; height: 22px; cursor: pointer; }
+#videoTrack { display: flex; height: 90px; padding: 3px 0; background: var(--card); min-width: 100%; }
+#videoTrack:empty::after { content: "Add videos to start"; margin: auto; color: var(--muted); }
+#audioTrack { display: block; height: 48px; margin-top: 4px; cursor: pointer; }
+.clip { flex: none; display: flex; align-items: center; gap: 18px; height: 84px; padding: 0 6px; overflow: hidden; background: var(--field); border: 2px solid var(--line); border-radius: 6px; cursor: grab; }
+.clip.selected { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+.clip .thumb { width: 100px; height: 72px; pointer-events: none; }
+.clip .name { white-space: nowrap; font-size: 14px; }
+.clip .time { font-size: 14px; margin-top: 8px; }
+.gap { flex: none; width: 40px; display: grid; place-items: center; color: var(--muted); }
+.clip.before { border-left-color: #fff; }
+.clip.after { border-right-color: #fff; }
+#playhead { position: absolute; top: 2px; bottom: 0; width: 2px; margin-left: -1px; background: #fff; pointer-events: none; }
+#playhead::before { content: ""; position: absolute; top: 0; left: -3px; width: 8px; height: 18px; border-radius: 2px; background: var(--accent); }
+
+.actionbar { flex: none; display: flex; justify-content: flex-end; }
+#merge { width: 316px; height: 64px; font-size: 22px; font-weight: 600; gap: 22px; border: 0; background: linear-gradient(180deg, var(--accent), var(--accent-dark)); color: #fff; }
+#merge svg { width: 30px; height: 30px; }
+
+/* ---------- прочие страницы и диалог ---------- */
+.page { padding: 28px 36px; gap: 16px; overflow: auto; }
+.page h1 { margin: 0; font-size: 26px; }
+.page h3 { margin: 0; }
+.page .panel { max-width: 720px; padding: 18px 22px; }
+.check { display: flex; align-items: center; gap: 10px; }
+
+#overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, .65); display: grid; place-items: center; }
+.dialog { width: 500px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 12px; }
+progress { width: 100%; height: 12px; accent-color: var(--accent); }
+pre { max-height: 180px; overflow: auto; margin: 0; white-space: pre-wrap; user-select: text; color: var(--bad); font-size: 12px; }
+.actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* ---------- невысокие экраны ---------- */
+@media (max-height: 900px) {
+  .titlebar { height: 44px; }
+  .logo { width: 28px; height: 28px; }
+  nav { gap: 10px; padding-top: 12px; }
+  nav button { height: 84px; }
+  nav button svg { width: 30px; height: 30px; }
+  #view-merge { gap: 8px; padding-block: 10px; }
+  .output { gap: 4px; padding-block: 8px; }
+  .row { min-height: 30px; }
+  select, .path { height: 30px; }
+  .withicon > svg { top: 5px; }
+  .folder button { padding-block: 3px; }
+  .item { height: 76px; }
+  .thumb { height: 56px; width: 94px; }
+  .tlhead { height: 36px; }
+  .trackicons .v, #videoTrack { height: 70px; }
+  .clip { height: 64px; }
+  .clip .thumb { height: 52px; width: 80px; }
+  .clip .time { margin-top: 2px; }
+  .trackicons .a, #audioTrack { height: 36px; }
+  #merge { height: 46px; font-size: 18px; width: 260px; }
+  .player { min-height: 110px; }
+  .controls { height: 36px; }
+}

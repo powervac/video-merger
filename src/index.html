@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; media-src file:">
+  <title>Video Merger</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <svg xmlns="http://www.w3.org/2000/svg" class="sprite">
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 6 .4l3-3a4 4 0 0 0-5.700-5.700l-1.600 1.600M14 10a4 4 0 0 0-6-.4l-3 3a4 4 0 0 0 5.700 5.700l1.600-1.600"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><path class="fill" d="M19.4 13a7.600 7.600 0 0 0 0-2l2.100-1.600-2-3.500-2.500 1a7.300 7.300 0 0 0-1.700-1L14.9 3h-4l-.4 2.900a7.300 7.300 0 0 0-1.700 1l-2.500-1-2 3.500L6.400 11a7.600 7.600 0 0 0 0 2l-2.100 1.600 2 3.500 2.500-1a7.300 7.300 0 0 0 1.700 1l.4 2.9h4l.4-2.900a7.300 7.300 0 0 0 1.700-1l2.500 1 2-3.500zM12.900 15.5a3.500 3.500 0 1 1 0-7 3.500 3.500 0 0 1 0 7z"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.500"/><path d="M12 11v6M12 7.200v.1"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path class="fill" d="M9 3h6l1 2h4v2H4V5h4zM6 8h12l-1 13H7zm3 3v7h1.500v-7zm4.500 0v7H15v-7z"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path class="fill" d="M6 3.500v17l15-8.500z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path class="fill" d="M6 4h4v16H6zM14 4h4v16h-4z"/></symbol>
+    <symbol id="i-volume" viewBox="0 0 24 24"><path class="fill" d="M3 9h4l5-5v16l-5-5H3z"/><path d="M15.5 8.500a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></symbol>
+    <symbol id="i-mute" viewBox="0 0 24 24"><path class="fill" d="M3 9h4l5-5v16l-5-5H3z"/><path d="M16 9l6 6M22 9l-6 6"/></symbol>
+    <symbol id="i-full" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7"/></symbol>
+    <symbol id="i-film" viewBox="0 0 24 24"><path class="fill" d="M3 4h18v16H3zm2 2v2h2V6zm0 5v2h2v-2zm0 5v2h2v-2zM17 6v2h2V6zm0 5v2h2v-2zm0 5v2h2v-2zM9 6v12h6V6z"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path class="fill" d="M3 5h6l2 2h10v12H3z"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path class="fill" d="M12 3l10 5-10 5L2 8z"/><path d="M3 12.500l9 4.500 9-4.500M3 16.500l9 4.500 9-4.500"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path class="fill" d="M3 6h12v12H3zM16 10l6-4v12l-6-4z"/></symbol>
+    <symbol id="i-music" viewBox="0 0 24 24"><path class="fill" d="M9 4l11-2v14.500a3 3 0 1 1-2-2.800V7l-7 1.300v10.2a3 3 0 1 1-2-2.8z"/></symbol>
+    <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5.500" rx="8" ry="3"/><path d="M4 5.5v13c0 1.700 3.6 3 8 3s8-1.3 8-3v-13M4 12c0 1.700 3.6 3 8 3s8-1.300 8-3"/></symbol>
+  </svg>
+
+  <header class="titlebar">
+    <svg class="logo" viewBox="0 0 24 24"><path d="M3 3.500c0-1.200 1.200-1.800 2.200-1.200l15 8.500c1 .6 1 1.8 0 2.400l-15 8.500c-1 .6-2.200 0-2.200-1.2z"/><path class="cut" d="M8.500 8v8l7-4z"/></svg>
+    <span>Video Merger</span>
+    <div class="winbuttons">
+      <button data-win="minimize" title="Minimize"><svg viewBox="0 0 24 24"><path d="M4 12h16"/></svg></button>
+      <button data-win="maximize" title="Maximize"><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="1"/></svg></button>
+      <button data-win="close" title="Close" class="closer"><svg><use href="#i-x"/></svg></button>
+    </div>
+  </header>
+
+  <div class="app">
+    <nav>
+      <button data-view="merge" class="active"><svg><use href="#i-link"/></svg>Merge</button>
+      <button data-view="settings"><svg><use href="#i-gear"/></svg>Settings</button>
+      <button data-view="about"><svg><use href="#i-info"/></svg>About</button>
+    </nav>
+
+    <div class="content">
+      <section class="view" id="view-merge">
+        <div class="top">
+          <div class="left">
+            <div id="dropzone" tabindex="0">
+              <svg class="dropicon" viewBox="0 0 140 120">
+                <g transform="rotate(-12 55 60)">
+                  <rect x="10" y="14" width="92" height="88" rx="8" fill="#2f7bf6"/>
+                  <rect x="24" y="30" width="64" height="56" rx="3" fill="#1d2d52"/>
+                  <path d="M20 22h8M36 22h8M52 22h8M68 22h8M84 22h8M20 94h8M36 94h8M52 94h8M68 94h8M84 94h8" stroke="#10213f" stroke-width="7"/>
+                </g>
+                <rect x="80" y="62" width="52" height="52" rx="9" fill="#5b57e8"/>
+                <path d="M106 75v26M93 88h26" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+              </svg>
+              <div>
+                <div class="droptitle">Drag &amp; Drop Your Videos</div>
+                <div class="dropsub">or click to add files</div>
+                <button id="addFolder" class="link"><svg><use href="#i-folder"/></svg>Add a whole folder</button>
+              </div>
+            </div>
+
+            <div class="listhead">
+              <h2><span>Video Files (<span id="count">0</span>)</span></h2>
+              <button id="clear" class="ghost" disabled><svg><use href="#i-trash"/></svg>Clear All</button>
+            </div>
+            <div id="list"></div>
+          </div>
+
+          <div class="right">
+            <div class="player" id="playerBox">
+              <div class="screen">
+                <video id="video" preload="metadata"></video>
+                <button id="bigPlay" title="Play" hidden><svg><use href="#i-play"/></svg></button>
+                <div id="playerNote">No video selected</div>
+              </div>
+              <div class="controls">
+                <button id="play" title="Play / Pause"><svg><use href="#i-play"/></svg></button>
+                <span id="clock">00:00 / 00:00</span>
+                <input id="seek" type="range" min="0" max="1000" value="0">
+                <button id="mute" title="Mute"><svg><use href="#i-volume"/></svg></button>
+                <button id="full" title="Full screen"><svg><use href="#i-full"/></svg></button>
+              </div>
+            </div>
+
+            <div class="panel output">
+              <h2><svg><use href="#i-gear"/></svg>Output Settings</h2>
+              <div class="row">
+                <label for="format">Output Format:</label>
+                <div class="withicon">
+                  <svg><use href="#i-film"/></svg>
+                  <select id="format">
+                    <option value="mp4:h264">MP4 (H.264)</option>
+                    <option value="mp4:hevc">MP4 (H.265)</option>
+                    <option value="mov:h264">MOV (H.264)</option>
+                    <option value="mov:hevc">MOV (H.265)</option>
+                    <option value="mkv:h264">MKV (H.264)</option>
+                    <option value="mkv:hevc">MKV (H.265)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <label for="resolution">Resolution:</label>
+                <select id="resolution">
+                  <option value="source">Keep Original</option>
+                  <option value="3840x2160">3840×2160 (4K)</option>
+                  <option value="1920x1080">1920×1080 (Full HD)</option>
+                  <option value="1280x720">1280×720 (HD)</option>
+                  <option value="1080x1920">1080×1920 (Reels, Shorts)</option>
+                  <option value="1080x1350">1080×1350 (Instagram feed)</option>
+                </select>
+              </div>
+              <div class="row">
+                <label for="fps">Frame Rate:</label>
+                <select id="fps">
+                  <option value="source">Keep Original</option>
+                  <option value="24">24 fps</option>
+                  <option value="25">25 fps</option>
+                  <option value="30">30 fps</option>
+                  <option value="50">50 fps</option>
+                  <option value="60">60 fps</option>
+                </select>
+              </div>
+              <div class="row">
+                <label for="quality">Quality:</label>
+                <div class="slider">
+                  <input id="quality" type="range" min="0" max="3" step="1" value="2">
+                  <span id="qualityName">High</span>
+                </div>
+              </div>
+              <div class="row">
+                <label>Output Folder:</label>
+                <div class="folder">
+                  <div class="path"><svg><use href="#i-folder"/></svg><span id="outputDir">Same as first video</span></div>
+                  <button id="browse">Browse...</button>
+                </div>
+              </div>
+              <div id="hint"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel timeline">
+          <div class="tlhead">
+            <svg class="layers"><use href="#i-layers"/></svg>
+            <span class="sep">Timeline — Drag &amp; Drop to Change Order</span>
+            <span class="spacer"></span>
+            <span>Total Duration: <span id="total">00:00:00</span></span>
+            <span class="size"><svg><use href="#i-db"/></svg><span id="estimate">~ 0 MB</span></span>
+          </div>
+          <div class="tlbody">
+            <div class="trackicons">
+              <div></div>
+              <div class="v"><svg><use href="#i-camera"/></svg></div>
+              <div class="a"><svg><use href="#i-music"/></svg></div>
+            </div>
+            <div id="scroller">
+              <div id="tracks">
+                <canvas id="ruler"></canvas>
+                <div id="videoTrack"></div>
+                <canvas id="audioTrack"></canvas>
+                <div id="playhead" hidden></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="actionbar">
+          <button id="merge" disabled><svg><use href="#i-play"/></svg>Merge Videos</button>
+        </div>
+      </section>
+
+      <section class="view page" id="view-settings" hidden>
+        <h1>Settings</h1>
+        <div class="panel">
+          <label class="check"><input type="checkbox" id="hw" disabled><span id="hwLabel">Hardware acceleration: checking…</span></label>
+          <p class="muted">Used only when the video is re-encoded.</p>
+        </div>
+        <div class="panel">
+          <h3>FFmpeg</h3>
+          <p id="ffmpegInfo" class="muted selectable">Checking…</p>
+        </div>
+      </section>
+
+      <section class="view page" id="view-about" hidden>
+        <h1>Video Merger</h1>
+        <div class="panel">
+          <p>Joins video files into one. Version <span id="version"></span>.</p>
+          <p class="muted">Add files or a folder, arrange them on the timeline, press Merge Videos. With Quality set to Original the picture is copied without re-encoding.</p>
+          <p class="muted">Powered by FFmpeg and Electron.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div id="overlay" hidden>
+    <div class="dialog">
+      <h2 id="jobTitle">Merging…</h2>
+      <progress id="progress" max="100" value="0"></progress>
+      <div id="jobInfo" class="muted selectable"></div>
+      <pre id="jobError" hidden></pre>
+      <div class="actions">
+        <button id="cancel">Cancel</button>
+        <button id="reveal" hidden>Show in Folder</button>
+        <button id="done" class="primary" hidden>Done</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

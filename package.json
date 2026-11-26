@@ -1,0 +1,28 @@
+{
+  "name": "videoglue",
+  "version": "1.0.0",
+  "description": "Склейка видеофайлов из папки в один ролик",
+  "main": "src/main.js",
+  "scripts": {
+    "prestart": "node scripts/check-deps.js",
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "ffmpeg-static": "^5.2.0",
+    "ffprobe-static": "^3.1.0"
+  },
+  "devDependencies": {
+    "electron": "^37.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "local.videoglue",
+    "productName": "VideoGlue",
+    "files": ["src/**/*", "package.json"],
+    "asarUnpack": ["node_modules/ffmpeg-static/**", "node_modules/ffprobe-static/**"],
+    "win": { "target": "portable" },
+    "mac": { "target": "dmg" },
+    "linux": { "target": "AppImage", "category": "AudioVideo" }
+  }
+}

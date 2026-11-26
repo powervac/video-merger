@@ -43,6 +43,12 @@ function works(file) {
   return r.status === 0;
 }
 
+// Папка, куда приложение само докачивает ffmpeg при первом запуске.
+let toolsDir = null;
+function setToolsDir(dir) {
+  toolsDir = dir;
+}
+
 const binCache = {};
 /** Порядок: переменная окружения, системный ffmpeg, зависимость приложения. */
 function locate(name) {
@@ -51,6 +57,7 @@ function locate(name) {
       ['env', () => process.env[`${name.toUpperCase()}_PATH`]],
       ['system', () => findInPath(name)],
       ['bundled', () => bundled(name)],
+      ['downloaded', () => toolsDir && path.join(toolsDir, process.platform === 'win32' ? `${name}.exe` : name)],
     ];
     for (const [source, get] of candidates) {
       const file = get();
@@ -65,7 +72,7 @@ function locate(name) {
 
 function bin(name) {
   const found = locate(name);
-  if (!found) throw new Error(`${name} not found. Run npm install in the app folder.`);
+  if (!found) throw new Error(`${name} not found. Restart the app to install it.`);
   return found.path;
 }
 
@@ -403,4 +410,4 @@ function exportVideo(clips, options, output, onProgress = () => {}) {
   };
 }
 
-module.exports = { bin, locate,listVideos, probe, thumbnail, copyProblems, detectHardware, buildArgs, exportVideo, waveform, uniqueOutput };
+module.exports = { setToolsDir, bin, locate, listVideos, probe, thumbnail, copyProblems, detectHardware, buildArgs, exportVideo, waveform, uniqueOutput };

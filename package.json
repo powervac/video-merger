@@ -1,28 +1,41 @@
 {
-  "name": "videoglue",
+  "name": "video-merger",
+  "productName": "Video Merger",
   "version": "1.0.0",
-  "description": "Склейка видеофайлов из папки в один ролик",
+  "description": "Join video files into one",
   "main": "src/main.js",
   "scripts": {
     "prestart": "node scripts/check-deps.js",
     "start": "electron .",
-    "dist": "electron-builder"
-  },
-  "dependencies": {
-    "ffmpeg-static": "^5.2.0",
-    "ffprobe-static": "^3.1.0"
+    "dist": "electron-builder --publish never"
   },
   "devDependencies": {
     "electron": "^37.0.0",
-    "electron-builder": "^25.1.8"
+    "electron-builder": "^25.1.8",
+    "ffmpeg-static": "^5.2.0",
+    "ffprobe-static": "^3.1.0"
   },
   "build": {
-    "appId": "local.videoglue",
-    "productName": "VideoGlue",
-    "files": ["src/**/*", "package.json"],
-    "asarUnpack": ["node_modules/ffmpeg-static/**", "node_modules/ffprobe-static/**"],
-    "win": { "target": "portable" },
-    "mac": { "target": "dmg" },
-    "linux": { "target": "AppImage", "category": "AudioVideo" }
+    "appId": "cc.altcom.videomerger",
+    "productName": "Video Merger",
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "compression": "maximum",
+    "electronLanguages": [
+      "en-US"
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "build/icon.png"
+    },
+    "portable": {
+      "artifactName": "VideoMergerPortable.exe"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.png"
+    }
   }
 }

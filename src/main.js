@@ -5,11 +5,15 @@ const fs = require('fs');
 const path = require('path');
 const { pathToFileURL } = require('url');
 const media = require('./media');
+const setup = require('./setup');
 
 const isMac = process.platform === 'darwin';
 let win = null;
 let job = null;
 let hardware = null;
+let installing = null;
+
+const toolsDir = () => path.join(app.getPath('userData'), 'ffmpeg');
 
 function createWindow() {
   const area = screen.getPrimaryDisplay().workAreaSize;
@@ -45,6 +49,16 @@ ipcMain.handle('window', (_e, action) => {
   if (action === 'minimize') win.minimize();
   if (action === 'maximize') win.isMaximized() ? win.unmaximize() : win.maximize();
   if (action === 'close') win.close();
+});
+
+ipcMain.handle('install-ffmpeg', () => {
+  const missing = ['ffmpeg', 'ffprobe'].filter((name) => !media.locate(name));
+  installing =
+    installing ||
+    setup
+      .install(missing, toolsDir(), (p) => !win.isDestroyed() && win.webContents.send('setup-progress', p))
+      .finally(() => (installing = null));
+  return installing;
 });
 
 // Проверка при запуске: какой ffmpeg будет использоваться и есть ли он вообще.
@@ -136,7 +150,10 @@ ipcMain.handle('export', async (_e, clips, options) => {
 ipcMain.handle('cancel-export', () => job?.cancel());
 ipcMain.handle('show-in-folder', (_e, file) => shell.showItemInFolder(file));
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  media.setToolsDir(toolsDir());
+  createWindow();
+});
 app.on('window-all-closed', () => app.quit());
 app.on('before-quit', () => {
   job?.cancel();

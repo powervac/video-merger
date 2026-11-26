@@ -7,6 +7,8 @@ const call = (channel) => (...args) => ipcRenderer.invoke(channel, ...args);
 contextBridge.exposeInMainWorld('api', {
   window: call('window'),
   info: call('info'),
+  installFfmpeg: call('install-ffmpeg'),
+  onSetupProgress: (cb) => ipcRenderer.on('setup-progress', (_e, p) => cb(p)),
   chooseFiles: call('choose-files'),
   chooseFolder: call('choose-folder'),
   probe: call('probe'),

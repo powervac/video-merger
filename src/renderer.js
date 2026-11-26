@@ -588,20 +588,50 @@ for (const button of document.querySelectorAll('[data-win]')) button.onclick = (
 update();
 updatePlayer();
 
-window.api.info().then(async ({ version, platform, ffmpeg, ffprobe }) => {
-  document.body.classList.toggle('mac', platform === 'darwin');
-  $('version').textContent = version;
-  if (!ffmpeg || !ffprobe) {
-    $('ffmpegInfo').textContent = 'Not found';
-    showError('FFmpeg not found', 'Start the app with start.bat or start.command so FFmpeg gets installed.');
-    return;
+// ---------- проверка компонентов при запуске ----------
+
+window.api.onSetupProgress(({ name, index, count, percent }) => {
+  $('setupText').textContent = `Downloading ${name} (${index + 1} of ${count}) · ${percent}%`;
+  $('setupProgress').value = (index * 100 + percent) / count;
+});
+
+async function start() {
+  let info = await window.api.info();
+  document.body.classList.toggle('mac', info.platform === 'darwin');
+  $('version').textContent = info.version;
+
+  if (!info.ffmpeg || !info.ffprobe) {
+    $('setup').hidden = false;
+    $('setupRetry').hidden = true;
+    $('setupProgress').value = 0;
+    $('setupText').textContent = 'FFmpeg is not installed. Downloading it now (about 60 MB, only once)…';
+    try {
+      await window.api.installFfmpeg();
+      info = await window.api.info();
+      if (!info.ffmpeg || !info.ffprobe) throw new Error('FFmpeg was downloaded but does not start.');
+    } catch (err) {
+      const message = err.message.replace(/^Error invoking remote method '[^']+': (\w*Error: )?/, '');
+      $('setupText').textContent = `Could not install FFmpeg: ${message}\nCheck the internet connection and try again.`;
+      $('setupRetry').hidden = false;
+      return;
+    }
   }
-  const sources = { env: 'set by environment variable', system: 'installed in the system', bundled: 'bundled with the app' };
-  $('ffmpegInfo').textContent = `Using the one ${sources[ffmpeg.source]}\n${ffmpeg.path}\n${ffprobe.path}`;
+  $('setup').hidden = true;
+
+  const sources = {
+    env: 'set by environment variable',
+    system: 'installed in the system',
+    bundled: 'bundled with the app',
+    downloaded: 'downloaded by the app',
+  };
+  $('ffmpegInfo').textContent = `Using the one ${sources[info.ffmpeg.source]}\n${info.ffmpeg.path}\n${info.ffprobe.path}`;
 
   hardware = await window.api.detectHardware();
   const found = [hardware.h264, hardware.hevc].filter(Boolean);
   $('hw').disabled = !found.length;
   $('hw').checked = found.length > 0;
   $('hwLabel').textContent = found.length ? `Hardware acceleration (${found.join(', ')})` : 'Hardware acceleration is not available';
-});
+}
+
+$('setupRetry').onclick = start;
+start();

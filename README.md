@@ -35,6 +35,12 @@ Quality **Original** joins without re-encoding. It is available when the clips h
 resolution and frame rate are Keep Original. Cuts then move to the nearest keyframe; with High, Medium or Small
 they are frame-exact. Source files are never overwritten; replacing another file asks first.
 
+## Split Screen
+
+Two videos in one frame: vertical ones **side by side**, horizontal ones **top and bottom**. Frame sizes close to a square
+or exactly square, any source resolution. Choose whether the whole video is shown (bars if needed) or the half is filled
+(edges cropped), and whose sound to keep. A shorter video holds its last frame.
+
 ## FFmpeg
 
 Looked up in this order: `FFMPEG_PATH` / `FFPROBE_PATH`, the system, the npm packages (development only),

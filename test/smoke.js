@@ -1,4 +1,4 @@
-// End-to-end check of a built application: first start downloads FFmpeg, then two merges.
+// End-to-end check of a built application: first start downloads FFmpeg, then two merges and two split screens.
 // Usage: node test/smoke.js <path to the application binary>   (Node 22 or newer)
 'use strict';
 
@@ -83,9 +83,25 @@ async function main() {
       if (result !== 'Done') throw new Error(result);
       await js(`$('done').click()`);
     }
+    // Split Screen: обе раскладки через тот же вызов, что и кнопка Render Video.
+    for (const [direction, width, height] of [['row', 1080, 960], ['column', 1280, 1440]]) {
+      const output = path.join(out, `split-${direction}.mp4`);
+      const size = await js(`(async () => {
+        const found = await window.api.probe(${JSON.stringify(clips)});
+        const pair = found.map(({ url, ...c }) => ({ ...c, in: 0, out: c.duration }));
+        const options = { mode: 'sidebyside', direction: '${direction}', fit: 'whole', audio: 'both', format: 'mp4', codec: 'h264',
+          quality: 'medium', width: ${width}, height: ${height}, fps: 25, encoder: null, output: ${JSON.stringify(output)} };
+        await window.api.exportVideo(pair, options);
+        const [result] = await window.api.probe([options.output]);
+        return result.width + 'x' + result.height;
+      })()`);
+      console.log('split screen', direction, '->', size);
+      if (size !== `${width}x${height}`) throw new Error('wrong split screen size');
+    }
+
     const files = fs.readdirSync(out);
     console.log('results:', files);
-    if (files.length !== 2) throw new Error('expected two result files');
+    if (files.length !== 4) throw new Error('expected four result files');
 
     const shot = await send('Page.captureScreenshot', { format: 'png' });
     fs.writeFileSync(path.join(shots, `${process.platform}-${process.arch}.png`), Buffer.from(shot.result.data, 'base64'));

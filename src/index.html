@@ -24,6 +24,8 @@
     <symbol id="i-camera" viewBox="0 0 24 24"><path class="fill" d="M3 6h12v12H3zM16 10l6-4v12l-6-4z"/></symbol>
     <symbol id="i-music" viewBox="0 0 24 24"><path class="fill" d="M9 4l11-2v14.500a3 3 0 1 1-2-2.800V7l-7 1.300v10.2a3 3 0 1 1-2-2.8z"/></symbol>
     <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5.500" rx="8" ry="3"/><path d="M4 5.5v13c0 1.700 3.6 3 8 3s8-1.3 8-3v-13M4 12c0 1.700 3.6 3 8 3s8-1.300 8-3"/></symbol>
+    <symbol id="i-columns" viewBox="0 0 24 24"><rect x="3" y="4" width="8" height="16" rx="1.500"/><rect x="13" y="4" width="8" height="16" rx="1.500"/></symbol>
+    <symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 8h13l-4-4M17 16H4l4 4"/></symbol>
     <symbol id="i-scissors" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.600 7.700L20 18M8.600 16.3L20 6"/></symbol>
     <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/></symbol>
     <symbol id="i-redo" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5M20 9H10a6 6 0 0 0 0 12h3"/></symbol>
@@ -42,6 +44,7 @@
   <div class="app">
     <nav>
       <button data-view="merge" class="active"><svg><use href="#i-link"/></svg>Merge</button>
+      <button data-view="sbs" title="Two videos in one frame"><svg><use href="#i-columns"/></svg>Split Screen</button>
       <button data-view="settings"><svg><use href="#i-gear"/></svg>Settings</button>
       <button data-view="about"><svg><use href="#i-info"/></svg>About</button>
     </nav>
@@ -206,6 +209,80 @@
         </div>
       </section>
 
+      <section class="view" id="view-sbs" hidden>
+        <div class="sbs-main">
+          <div class="sbs-stage">
+            <div class="sbs-area">
+              <div class="sbs-frame">
+                <div class="slot" data-side="0" tabindex="0">
+                  <video preload="auto" playsinline></video>
+                  <div class="slot-empty"><svg><use href="#i-film"/></svg><b></b><span></span></div>
+                  <button class="slot-remove" title="Remove" hidden><svg><use href="#i-x"/></svg></button>
+                  <div class="slot-info" hidden></div>
+                </div>
+                <div class="slot" data-side="1" tabindex="0">
+                  <video preload="auto" playsinline></video>
+                  <div class="slot-empty"><svg><use href="#i-film"/></svg><b></b><span></span></div>
+                  <button class="slot-remove" title="Remove" hidden><svg><use href="#i-x"/></svg></button>
+                  <div class="slot-info" hidden></div>
+                </div>
+              </div>
+            </div>
+            <div class="controls">
+              <button id="sbsPlay" title="Play / Pause both"><svg><use href="#i-play"/></svg></button>
+              <span id="sbsClock">00:00 / 00:00</span>
+              <input id="sbsSeek" type="range" min="0" max="1000" value="0">
+              <button id="sbsSwap" title="Swap the two videos"><svg><use href="#i-swap"/></svg>Swap</button>
+            </div>
+          </div>
+
+          <div class="panel output sbs-settings">
+            <h2><svg><use href="#i-gear"/></svg>Output Settings</h2>
+            <div class="row"><label for="sbsLayout">Layout:</label>
+              <select id="sbsLayout">
+                <option value="row">Side by side</option>
+                <option value="column">Top and bottom</option>
+              </select>
+            </div>
+            <div class="row"><label for="sbsSize">Frame:</label>
+              <select id="sbsSize"></select>
+            </div>
+            <div class="row"><label for="sbsFit">Picture:</label>
+              <select id="sbsFit">
+                <option value="whole">Whole video (add bars)</option>
+                <option value="fill">Fill the half (crop edges)</option>
+              </select>
+            </div>
+            <div class="row"><label for="sbsFormat">Format:</label>
+              <select id="sbsFormat">
+                <option value="mp4:h264">MP4 (H.264)</option>
+                <option value="mp4:hevc">MP4 (H.265)</option>
+                <option value="mov:h264">MOV (H.264)</option>
+              </select>
+            </div>
+            <div class="row"><label for="sbsAudio">Sound:</label>
+              <select id="sbsAudio">
+                <option value="both">Both videos</option>
+                <option value="left">Left only</option>
+                <option value="right">Right only</option>
+                <option value="none">No sound</option>
+              </select>
+            </div>
+            <div class="row"><label for="sbsQuality">Quality:</label>
+              <select id="sbsQuality">
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="small">Small file</option>
+              </select>
+            </div>
+            <div id="sbsHint" class="muted"></div>
+          </div>
+        </div>
+        <div class="actionbar">
+          <button id="sbsRender" class="render" disabled><svg><use href="#i-play"/></svg>Render Video</button>
+        </div>
+      </section>
+
       <section class="view page" id="view-settings" hidden>
         <h1>Settings</h1>
         <div class="panel">
@@ -256,5 +333,6 @@
 
   <script src="renderer.js"></script>
   <script src="layout.js"></script>
+  <script src="sidebyside.js"></script>
 </body>
 </html>

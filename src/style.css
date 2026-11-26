@@ -29,6 +29,7 @@ body {
 .sprite { display: none; }
 svg { width: 1.25em; height: 1.25em; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 symbol .fill { fill: currentColor; stroke: none; }
+button svg { pointer-events: none; }
 button, select { font: inherit; color: inherit; }
 button {
   display: inline-flex;
@@ -239,8 +240,33 @@ select { width: 100%; height: 36px; padding: 0 12px; background: var(--field); b
 #playhead::before { content: ""; position: absolute; top: 0; left: -3px; width: 8px; height: 18px; border-radius: 2px; background: var(--accent); }
 
 .actionbar { flex: none; display: flex; justify-content: flex-end; }
-#merge { width: 316px; height: 64px; font-size: 22px; font-weight: 600; gap: 22px; border: 0; background: linear-gradient(180deg, var(--accent), var(--accent-dark)); color: #fff; }
-#merge svg { width: 30px; height: 30px; }
+#merge, .render { width: 316px; height: 64px; font-size: 22px; font-weight: 600; gap: 22px; border: 0; background: linear-gradient(180deg, var(--accent), var(--accent-dark)); color: #fff; }
+#merge svg, .render svg { width: 30px; height: 30px; }
+
+/* ---------- два видео рядом ---------- */
+#view-sbs { padding: 14px 18px; gap: 12px; }
+.sbs-main { flex: 1; min-height: 0; display: flex; gap: 22px; }
+.sbs-stage { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--panel); border-radius: 8px; overflow: hidden; }
+.sbs-area { flex: 1; min-height: 0; display: grid; place-items: center; padding: 12px; container-type: size; }
+/* Рамка повторяет пропорции результата 9:8. */
+.sbs-frame { width: min(100cqw, 100cqh * var(--sbs-ratio, 1.125)); aspect-ratio: var(--sbs-ratio, 1.125); display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 100%; background: #000; }
+.slot { position: relative; min-width: 0; min-height: 0; cursor: pointer; outline: 1px dashed #566077; outline-offset: -1px; }
+.slot.filled { outline: none; }
+.slot.over { outline: 2px solid var(--accent); outline-offset: -2px; }
+.slot video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.sbs-frame.fill video { object-fit: cover; }
+.sbs-frame.column { grid-template-columns: 100%; grid-template-rows: 1fr 1fr; }
+.sbs-frame.column .slot-empty { gap: 4px; padding: 8px; }
+.sbs-frame.column .slot-empty svg { width: 34px; height: 34px; }
+.slot-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 16px; text-align: center; color: var(--muted); }
+.slot-empty svg { width: 46px; height: 46px; color: var(--accent); }
+.slot-empty b { color: var(--text); font-size: 18px; }
+.slot-remove { position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; padding: 0; border-radius: 50%; background: rgba(0, 0, 0, .65); border: 0; }
+.slot-info { position: absolute; left: 0; right: 0; bottom: 0; padding: 6px 10px; background: rgba(0, 0, 0, .6); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sbs-stage .controls button { gap: 6px; }
+.sbs-settings { width: 380px; flex: none; align-self: flex-start; max-height: 100%; }
+#sbsHint { font-size: 12.5px; }
+#sbsHint.warn { color: var(--warn); }
 
 /* ---------- прочие страницы и диалог ---------- */
 .page { padding: 28px 36px; gap: 16px; overflow: auto; }
@@ -293,7 +319,7 @@ pre { max-height: 180px; overflow: auto; margin: 0; white-space: pre-wrap; user-
   .clip .thumb { width: 80px; }
   .clip .time { margin-top: 2px; }
   .trackicons .a, #audioTrack { height: 36px; }
-  #merge { height: 46px; font-size: 18px; width: 260px; }
+  #merge, .render { height: 46px; font-size: 18px; width: 260px; }
   .player { min-height: 110px; }
   .controls { height: 36px; }
 }

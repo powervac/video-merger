@@ -130,12 +130,12 @@ ipcMain.handle('detect-hardware', () => {
 });
 
 /** Спрашивает имя файла для результата; null — пользователь передумал. */
-ipcMain.handle('choose-output', async (_e, firstName, dir, format) => {
+ipcMain.handle('choose-output', async (_e, firstName, dir, format, suffix = 'merged') => {
   const r = await dialog.showSaveDialog(win, {
     title: 'Save video as',
     buttonLabel: 'Render',
     // Предлагаем свободное имя; заменить существующий файл можно только подтвердив это в диалоге.
-    defaultPath: media.uniqueOutput(dir, `${path.parse(firstName).name}_merged`, format),
+    defaultPath: media.uniqueOutput(dir, `${path.parse(firstName).name}_${suffix}`, format),
     filters: [{ name: `${format.toUpperCase()} video`, extensions: [format] }],
     properties: ['showOverwriteConfirmation', 'createDirectory'],
   });

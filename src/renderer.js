@@ -67,6 +67,16 @@ function icon(name) {
   return svg;
 }
 
+/**
+ * Меняет значок кнопки, только когда он действительно другой. Плеер обновляется много раз в секунду,
+ * и замена значка между нажатием и отпусканием мыши «съедала» щелчок: пауза не срабатывала.
+ */
+function setIcon(button, name) {
+  if (button.dataset.icon === name) return;
+  button.dataset.icon = name;
+  button.replaceChildren(icon(name));
+}
+
 function thumbNode(clip) {
   if (!clip.thumb) return el('div', 'thumb', clip.error ? '⚠' : '…');
   const img = el('img', 'thumb');
@@ -303,7 +313,10 @@ window.addEventListener('dragleave', (e) => {
 });
 window.addEventListener('drop', (e) => {
   $('dropzone').classList.remove('over');
-  if (!external(e)) return;
+  if (!external(e) || $('view-merge').hidden) {
+    if (external(e)) e.preventDefault(); // в других разделах файлы принимает сам раздел
+    return;
+  }
   e.preventDefault();
   addPaths([...e.dataTransfer.files].map((f) => window.api.pathForFile(f)).filter(Boolean));
 });
@@ -629,7 +642,7 @@ function updatePlayer() {
   const part = duration ? time / duration : 0;
   $('seek').value = Math.round(part * 1000);
   $('seek').style.setProperty('--fill', `${part * 100}%`);
-  $('play').replaceChildren(icon(video.paused ? 'play' : 'pause'));
+  setIcon($('play'), video.paused ? 'play' : 'pause');
   $('bigPlay').hidden = !selected || !video.paused;
   movePlayhead();
 }
@@ -695,7 +708,7 @@ $('seek').oninput = () => {
 };
 $('mute').onclick = () => {
   video.muted = !video.muted;
-  $('mute').replaceChildren(icon(video.muted ? 'mute' : 'volume'));
+  setIcon($('mute'), video.muted ? 'mute' : 'volume');
 };
 $('full').onclick = () => {
   if (document.fullscreenElement) document.exitFullscreen();

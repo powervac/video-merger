@@ -319,10 +319,62 @@ function containerArgs(format) {
 }
 
 /**
+ * Два видео в одном кадре: clips = [первое, второе]. Короткое замирает на последнем кадре.
+ * options.direction: 'row' (слева и справа) | 'column' (сверху и снизу)
+ * options.audio: 'both' | 'left' | 'right' | 'none'
+ * options.fit: 'whole' (видео целиком, возможны полосы) | 'fill' (заполнить половину, края обрезаются)
+ * Любые исходные разрешения приводятся к размеру половины кадра.
+ */
+function sideBySideArgs(clips, options) {
+  const { width, height, fps } = options;
+  const column = options.direction === 'column';
+  const cellWidth = column ? width : width / 2;
+  const cellHeight = column ? height / 2 : height;
+  const longest = Math.max(...clips.map(lengthOf));
+  const inputs = [];
+  const filters = [];
+
+  clips.forEach((clip, i) => {
+    if (isTrimmed(clip)) inputs.push('-ss', startOf(clip).toFixed(6), '-t', lengthOf(clip).toFixed(6));
+    inputs.push('-i', clip.path);
+    filters.push(
+      `[${i}:v:0]` +
+        (options.fit === 'fill'
+          ? `scale=${cellWidth}:${cellHeight}:force_original_aspect_ratio=increase:force_divisible_by=2,crop=${cellWidth}:${cellHeight},`
+          : `scale=${cellWidth}:${cellHeight}:force_original_aspect_ratio=decrease:force_divisible_by=2,pad=${cellWidth}:${cellHeight}:(ow-iw)/2:(oh-ih)/2,`) +
+        `setsar=1,setpts=PTS-STARTPTS,fps=${fps},format=yuv420p,` +
+        `tpad=stop_mode=clone:stop_duration=${(longest - lengthOf(clip) + 1).toFixed(3)}[v${i}]`,
+    );
+  });
+  filters.push(`[v0][v1]${column ? 'vstack' : 'hstack'}=inputs=2[v]`);
+
+  const wanted = { both: [0, 1], left: [0], right: [1], none: [] }[options.audio || 'both'];
+  const audible = wanted.filter((i) => clips[i].acodec);
+  audible.forEach((i) => {
+    filters.push(`[${i}:a:0]aresample=48000,aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,asetpts=PTS-STARTPTS,apad[a${i}]`);
+  });
+  if (audible.length === 2) filters.push('[a0][a1]amix=inputs=2:duration=longest:normalize=0,alimiter=limit=0.95[a]');
+  else if (audible.length === 1) filters.push(`[a${audible[0]}]anull[a]`);
+
+  return [
+    ...inputs,
+    '-filter_complex', filters.join(';'),
+    '-map', '[v]',
+    ...(audible.length ? ['-map', '[a]', '-c:a', 'aac', '-b:a', '192k'] : []),
+    ...videoArgs(options.encoder || (options.codec === 'hevc' ? 'libx265' : 'libx264'), options.quality),
+    ...(options.codec === 'hevc' && options.format !== 'mkv' ? ['-tag:v', 'hvc1'] : []),
+    // Дорожки дополнены «с запасом», поэтому длину задаём явно.
+    '-t', longest.toFixed(3),
+    ...containerArgs(options.format),
+  ];
+}
+
+/**
  * options: { mode: 'copy'|'encode', format: 'mp4'|'mov'|'mkv', width, height, fps,
  *            codec: 'h264'|'hevc', quality: 'high'|'medium'|'small', encoder }
  */
 function buildArgs(clips, options, listFile) {
+  if (options.mode === 'sidebyside') return sideBySideArgs(clips, options);
   if (options.mode === 'copy') {
     // PCM-звук в MP4 многие плееры не играют, поэтому для MP4 переводим только звук в AAC.
     const needAac = options.format === 'mp4' && clips[0].acodec && !['aac', 'mp3', 'ac3'].includes(clips[0].acodec);
@@ -387,6 +439,7 @@ function exportVideo(clips, options, output, onProgress = () => {}) {
   if (!clips.length) throw new Error('The timeline is empty');
   if (clips.some((c) => samePath(c.path, output))) throw new Error('The result cannot overwrite a source file');
   if (clips.some((c) => lengthOf(c) <= 0)) throw new Error('The timeline has an empty piece');
+  if (options.mode === 'sidebyside' && clips.length !== 2) throw new Error('Side by side needs exactly two videos');
   if (options.mode === 'copy') {
     const problems = copyProblems(clips);
     if (problems.length) throw new Error(`Lossless merge is impossible, clips differ in: ${problems.join(', ')}`);
@@ -469,7 +522,8 @@ function exportVideo(clips, options, output, onProgress = () => {}) {
       fs.writeFileSync(listFile, files.map(concatListLine).join('\n'), 'utf8');
     }
 
-    const total = parts.reduce((sum, c) => sum + lengthOf(c), 0);
+    // Рядом видео идут одновременно, друг за другом — по очереди.
+    const total = options.mode === 'sidebyside' ? Math.max(...parts.map(lengthOf)) : parts.reduce((sum, c) => sum + lengthOf(c), 0);
     // В режиме copy список файлов уже учитывает обрезку, в encode её задают входы ffmpeg.
     await ffmpeg([...buildArgs(clips, options, listFile), partial], (done, speed) => {
       if (total > 0) onProgress({ percent: Math.min(99.9, base + (done / total) * (100 - base)), done, total, speed });

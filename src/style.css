@@ -106,7 +106,18 @@ nav button.active { background: linear-gradient(160deg, var(--accent), var(--acc
 .dropsub { color: var(--muted); font-size: 18px; margin-top: 6px; }
 button.link { padding: 4px 0; margin-top: 4px; color: #6aa9ff; font-size: 14px; }
 
-.listhead { display: flex; align-items: center; justify-content: space-between; }
+.listhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.listhead h2 { margin-right: auto; white-space: nowrap; }
+.filters { display: flex; }
+.filters button { border-radius: 0; padding: 4px 10px; font-size: 13px; background: none; gap: 5px; }
+.filters button:first-child { border-radius: 7px 0 0 7px; }
+.filters button:last-child { border-radius: 0 7px 7px 0; }
+.filters button.active { background: var(--accent); border-color: var(--accent); }
+.filters b { font-weight: 400; opacity: .7; }
+#sort { width: auto; height: 30px; padding: 0 8px; font-size: 13px; }
+#orientationNote { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-top: -6px; }
+#orientationNote.warn { color: var(--warn); }
+#orientationNote button { padding: 3px 10px; font-size: 13px; }
 #list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
 #list:empty::after { content: "No videos yet"; margin: auto; color: var(--muted); }
 .item {
@@ -115,6 +126,7 @@ button.link { padding: 4px 0; margin-top: 4px; color: #6aa9ff; font-size: 14px; 
   align-items: center;
   gap: 24px;
   height: 91px;
+  overflow: hidden;
   padding: 0 20px;
   background: var(--card);
   border: 1px solid var(--line);
@@ -130,6 +142,8 @@ button.link { padding: 4px 0; margin-top: 4px; color: #6aa9ff; font-size: 14px; 
 .item .text { flex: 1; min-width: 0; }
 .item .name { font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .item .meta { color: var(--muted); margin-top: 5px; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item .meta.cut { color: #ffd54a; }
+.item .meta + .meta { margin-top: 1px; }
 .item .meta.error { color: var(--bad); white-space: normal; }
 .pill { flex: none; padding: 8px 17px; border: 1px solid var(--line); border-radius: 22px; font-variant-numeric: tabular-nums; }
 .item .remove { flex: none; padding: 6px; background: none; border-color: transparent; color: var(--muted); }
@@ -175,6 +189,11 @@ select { width: 100%; height: 36px; padding: 0 12px; background: var(--field); b
 .tlhead .sep { padding-left: 18px; border-left: 1px solid var(--line); }
 .tlhead .size { display: flex; align-items: center; gap: 8px; margin-left: 14px; }
 .tlhead .size svg { width: 22px; height: 22px; }
+.tools { display: flex; gap: 6px; }
+.tools button { padding: 3px 10px; font-size: 13px; gap: 6px; }
+.zoom { display: flex; align-items: center; gap: 8px; }
+.zoom input { width: 110px; flex: none; }
+@media (max-width: 1380px) { .tlhead .long { display: none; } }
 .tlbody { display: flex; padding-bottom: 8px; }
 .trackicons { width: 66px; flex: none; display: flex; flex-direction: column; color: var(--muted); }
 .trackicons div { display: grid; place-items: center; }
@@ -182,16 +201,23 @@ select { width: 100%; height: 36px; padding: 0 12px; background: var(--field); b
 .trackicons .v { height: 90px; background: var(--card); }
 .trackicons .a { height: 48px; margin-top: 4px; background: var(--card); }
 .trackicons svg { width: 28px; height: 28px; }
-#scroller { flex: 1; min-width: 0; overflow-x: auto; overflow-y: hidden; }
-#tracks { position: relative; min-width: 100%; width: max-content; padding-left: 24px; }
-#ruler { display: block; height: 22px; cursor: pointer; }
+#scroller { flex: 1; min-width: 0; margin-left: 12px; overflow-x: auto; overflow-y: hidden; }
+#tracks { position: relative; min-width: 100%; width: max-content; }
+#ruler { display: block; position: sticky; left: 0; height: 22px; cursor: pointer; }
 #videoTrack { display: flex; height: 90px; padding: 3px 0; background: var(--card); min-width: 100%; }
 #videoTrack:empty::after { content: "Add videos to start"; margin: auto; color: var(--muted); }
-#audioTrack { display: block; height: 48px; margin-top: 4px; cursor: pointer; }
-.clip { flex: none; display: flex; align-items: center; gap: 18px; height: 84px; padding: 0 6px; overflow: hidden; background: var(--field); border: 2px solid var(--line); border-radius: 6px; cursor: grab; }
+#audioTrack { display: block; position: sticky; left: 0; height: 48px; margin-top: 4px; cursor: pointer; }
+.clip { position: relative; flex: none; display: flex; align-items: center; gap: 18px; height: 84px; padding: 0 6px; overflow: hidden; background: var(--field); border: 2px solid var(--line); border-radius: 6px; cursor: grab; }
 .clip.selected { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
 .clip .thumb { width: 100px; height: 72px; pointer-events: none; }
-.clip .name { white-space: nowrap; font-size: 14px; }
+.clip .label { min-width: 0; overflow: hidden; }
+.clip .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; }
+.clip.narrow { gap: 0; padding: 0 12px; }
+.clip.narrow .thumb { display: none; }
+.handle { position: absolute; top: 0; bottom: 0; width: 9px; cursor: ew-resize; background: rgba(255, 255, 255, .14); touch-action: none; }
+.handle.left { left: 0; }
+.handle.right { right: 0; }
+.handle:hover, .clip.selected .handle { background: #ffd54a; }
 .clip .time { font-size: 14px; margin-top: 8px; }
 .gap { flex: none; width: 40px; display: grid; place-items: center; color: var(--muted); }
 .clip.before { border-left-color: #fff; }

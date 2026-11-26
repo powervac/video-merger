@@ -22,11 +22,16 @@ If Node.js is missing, a temporary copy is used and removed afterwards. Run the 
 ## How to use
 
 1. Drop files or a folder onto the top area (or click it).
-2. Drag to change the order in the list or on the timeline; `×` removes a clip.
-3. Choose format, resolution, frame rate, quality and output folder, then press **Merge Videos**.
+2. Drag to change the order, or sort by date or name.
+3. Cut: put the cursor on the timeline and press **Split** (S), then **Delete** the piece you do not need,
+   or drag the edges of a clip. Undo with Ctrl+Z (Cmd+Z). Zoom with Ctrl + mouse wheel; arrows step by one frame.
+4. If horizontal and vertical videos are mixed, the app warns you. The **Horizontal** / **Vertical** filter
+   shows and merges only that kind.
+5. Choose format, resolution, frame rate, quality and output folder, then press **Merge Videos**.
 
-Quality **Original** joins without re-encoding. It is available when the clips have the same
-parameters and resolution and frame rate are set to Keep Original. Existing files are never overwritten.
+Quality **Original** joins without re-encoding. It is available when the clips have the same parameters and
+resolution and frame rate are Keep Original. Cuts then move to the nearest keyframe; with High, Medium or Small
+they are frame-exact. Existing files are never overwritten.
 
 ## FFmpeg
 

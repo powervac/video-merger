@@ -16,7 +16,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function main() {
   fs.mkdirSync(shots, { recursive: true });
-  const app = spawn(binary, ['--remote-debugging-port=9333', `--user-data-dir=${profile}`], { stdio: 'inherit' });
+  // Если сам тест запущен через Electron как node, приложению эту переменную передавать нельзя.
+  const env = { ...process.env };
+  delete env.ELECTRON_RUN_AS_NODE;
+  const app = spawn(binary, ['--remote-debugging-port=9333', `--user-data-dir=${profile}`], { stdio: 'inherit', env });
   try {
     let page;
     for (let i = 0; i < 120 && !page; i++) {
@@ -56,7 +59,7 @@ async function main() {
     await until(`typeof $ === 'function' && ($('ffmpegInfo').textContent.startsWith('Using') || !$('setupRetry').hidden)`, 300, 'first start');
     const info = await js(`$('ffmpegInfo').textContent || $('setupText').textContent`);
     console.log(info);
-    const [ffmpeg] = info.split('\n').filter((line) => line.endsWith('ffmpeg'));
+    const [ffmpeg] = info.split('\n').filter((line) => /ffmpeg(.exe)?$/.test(line));
     if (!ffmpeg) throw new Error('FFmpeg is not ready');
 
     const clips = ['one.mp4', 'two.mp4'].map((name) => path.join(work, name));

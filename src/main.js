@@ -108,7 +108,7 @@ ipcMain.handle('probe', async (_e, paths) => {
   return result;
 });
 
-ipcMain.handle('thumbnail', (_e, file, duration) => media.thumbnail(file, duration).catch(() => null));
+ipcMain.handle('thumbnail', (_e, file, duration, from) => media.thumbnail(file, duration, from).catch(() => null));
 
 // Волну считаем по одному файлу: для этого читается весь ролик.
 let waveQueue = Promise.resolve();

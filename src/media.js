@@ -107,7 +107,10 @@ function parseRate(rate) {
 async function probe(file) {
   const base = { path: file, name: path.basename(file), size: 0 };
   try {
-    base.size = fs.statSync(file).size;
+    const stat = fs.statSync(file);
+    base.size = stat.size;
+    // Дата файла — запасной вариант: при копировании birthtime становится новым, mtime обычно сохраняется.
+    base.created = Math.min(stat.mtimeMs, stat.birthtimeMs || stat.mtimeMs);
     const out = await run(bin('ffprobe'), ['-v', 'error', '-print_format', 'json', '-show_streams', '-show_format', file]);
     const data = JSON.parse(out);
     const video = data.streams.find((s) => s.codec_type === 'video' && !s.disposition?.attached_pic);
@@ -118,6 +121,9 @@ async function probe(file) {
     return {
       ...base,
       duration: Number(data.format.duration) || Number(video.duration) || 0,
+      startTime: Number(data.format.start_time) || 0,
+      // Дата съёмки из самого видео надёжнее даты файла.
+      created: Date.parse(data.format.tags?.creation_time || video.tags?.creation_time || '') || base.created,
       width: sideways ? video.height : video.width,
       height: sideways ? video.width : video.height,
       rotation,
@@ -138,8 +144,9 @@ async function probe(file) {
   }
 }
 
-async function thumbnail(file, duration) {
-  const at = Math.min(1, (duration || 0) / 2);
+async function thumbnail(file, duration, from) {
+  // Для обрезанного куска берём кадр из его начала.
+  const at = from > 0 ? from : Math.min(1, (duration || 0) / 2);
   const out = await run(
     bin('ffmpeg'),
     ['-v', 'error', '-ss', String(at), '-i', file, '-map', '0:v:0', '-frames:v', '1', '-vf', 'scale=640:-2', '-c:v', 'mjpeg', '-f', 'image2pipe', 'pipe:1'],
@@ -258,6 +265,48 @@ function videoArgs(encoder, quality) {
   }
 }
 
+// ---------- обрезка ----------
+
+// clip.in / clip.out — границы куска в секундах от начала файла; без них берётся весь файл.
+const startOf = (c) => c.in || 0;
+const endOf = (c) => c.out ?? c.duration;
+const lengthOf = (c) => endOf(c) - startOf(c);
+const isTrimmed = (c) => startOf(c) > 0.001 || endOf(c) < c.duration - 0.001;
+
+/** Без перекодирования резать можно только по ключевым кадрам: ищем ближайший к моменту t. */
+async function nearestKeyframe(clip, t) {
+  if (t <= 0.001) return 0;
+  if (t >= clip.duration - 0.05) return clip.duration;
+  const offset = clip.startTime || 0;
+  for (const reach of [6, 30, 120]) {
+    const from = Math.max(0, t + offset - reach);
+    const out = await run(bin('ffprobe'), ['-v', 'error', '-select_streams', 'v:0', '-read_intervals', `${from}%${t + offset + reach}`,
+      '-show_entries', 'packet=pts_time,flags', '-of', 'csv=p=0', clip.path]);
+    const keys = String(out)
+      .split('\n')
+      .map((line) => line.split(','))
+      .filter(([pts, flags]) => flags?.includes('K') && Number.isFinite(Number(pts)))
+      .map(([pts]) => Number(pts) - offset);
+    if (keys.length) return Math.max(0, keys.reduce((a, b) => (Math.abs(b - t) < Math.abs(a - t) ? b : a)));
+  }
+  return t;
+}
+
+/** Команда, вырезающая кусок [a, b) без перекодирования. */
+function pieceArgs(clip, a, b, target) {
+  const toEnd = b >= clip.duration - 0.001;
+  return [
+    ...(a > 0 ? ['-ss', (a + 0.001).toFixed(6)] : []),
+    '-i', clip.path,
+    ...(toEnd ? [] : ['-t', (b - a).toFixed(6)]),
+    '-map', '0:v:0', '-map', '0:a:0?', '-c', 'copy',
+    // Точное число кадров: иначе из-за B-кадров прихватываются лишние за границей реза.
+    ...(toEnd || !clip.fps ? [] : ['-frames:v', String(Math.round((b - a) * clip.fps))]),
+    '-avoid_negative_ts', 'make_zero',
+    target,
+  ];
+}
+
 // ---------- сборка команды ----------
 
 function concatListLine(file) {
@@ -294,6 +343,8 @@ function buildArgs(clips, options, listFile) {
   const hasAudio = clips.some((c) => c.acodec);
 
   clips.forEach((clip, i) => {
+    // При перекодировании перемотка на входе точна до кадра.
+    if (isTrimmed(clip)) inputs.push('-ss', startOf(clip).toFixed(6), '-t', lengthOf(clip).toFixed(6));
     inputs.push('-i', clip.path);
     filters.push(
       `[${i}:v:0]scale=${width}:${height}:force_original_aspect_ratio=decrease:force_divisible_by=2,` +
@@ -306,7 +357,7 @@ function buildArgs(clips, options, listFile) {
       filters.push(`[${i}:a:0]aresample=48000,${common},asetpts=PTS-STARTPTS[a${i}]`);
     } else {
       // Клип без звука заполняем тишиной той же длины.
-      filters.push(`anullsrc=r=48000:cl=stereo,atrim=duration=${clip.duration},${common}[a${i}]`);
+      filters.push(`anullsrc=r=48000:cl=stereo,atrim=duration=${lengthOf(clip)},${common}[a${i}]`);
     }
     pads.push(`[a${i}]`);
   });
@@ -335,79 +386,115 @@ function samePath(a, b) {
 function exportVideo(clips, options, output, onProgress = () => {}) {
   if (!clips.length) throw new Error('The timeline is empty');
   if (clips.some((c) => samePath(c.path, output))) throw new Error('The result cannot overwrite a source file');
+  if (clips.some((c) => lengthOf(c) <= 0)) throw new Error('The timeline has an empty piece');
   if (options.mode === 'copy') {
     const problems = copyProblems(clips);
     if (problems.length) throw new Error(`Lossless merge is impossible, clips differ in: ${problems.join(', ')}`);
   }
 
-  const total = clips.reduce((sum, c) => sum + c.duration, 0);
   const ext = path.extname(output);
   // Пишем во временный файл: при отмене или ошибке не останется битого результата.
   const partial = path.join(path.dirname(output), `${path.basename(output, ext)}.part-${process.pid}${ext}`);
-  let listDir = null;
-  let listFile = null;
-  if (options.mode === 'copy') {
-    listDir = fs.mkdtempSync(path.join(os.tmpdir(), 'videoglue-'));
-    listFile = path.join(listDir, 'list.txt');
-    fs.writeFileSync(listFile, clips.map((c) => concatListLine(c.path)).join('\n'), 'utf8');
-  }
-
-  const args = ['-hide_banner', '-nostdin', '-y', '-v', 'error', '-progress', 'pipe:1', '-nostats', ...buildArgs(clips, options, listFile), partial];
-  const child = spawn(bin('ffmpeg'), args, { windowsHide: true });
+  let child = null;
   let cancelled = false;
-  let log = '';
-  let buffer = '';
-  let speed = '';
+  const temporary = [];
 
-  child.stdout.on('data', (chunk) => {
-    buffer += chunk;
-    const lines = buffer.split('\n');
-    buffer = lines.pop();
-    for (const line of lines) {
-      const [key, value = ''] = line.trim().split('=');
-      if (key === 'speed') speed = value.trim();
-      if (key === 'out_time_us' && total > 0 && Number(value) >= 0) {
-        const done = Number(value) / 1e6;
-        onProgress({ percent: Math.min(99.9, (done / total) * 100), done, total, speed });
-      }
-    }
-  });
-  child.stderr.on('data', (chunk) => {
-    log = (log + chunk).slice(-4000);
-  });
-
-  const cleanup = () => {
-    if (listDir) fs.rmSync(listDir, { recursive: true, force: true });
+  const checkCancelled = () => {
+    if (cancelled) throw new Error('Cancelled');
   };
 
-  const promise = new Promise((resolve, reject) => {
-    child.on('error', (err) => {
-      cleanup();
-      reject(err);
-    });
-    child.on('close', (code) => {
-      cleanup();
-      try {
-        if (cancelled || code !== 0) {
-          fs.rmSync(partial, { force: true });
-          return reject(new Error(cancelled ? 'Cancelled' : log.trim() || `ffmpeg exited with code ${code}`));
+  const ffmpeg = (args, onTime) =>
+    new Promise((resolve, reject) => {
+      checkCancelled();
+      child = spawn(bin('ffmpeg'), ['-hide_banner', '-nostdin', '-y', '-v', 'error', '-progress', 'pipe:1', '-nostats', ...args], { windowsHide: true });
+      let log = '';
+      let buffer = '';
+      let speed = '';
+      child.stdout.on('data', (chunk) => {
+        buffer += chunk;
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) {
+          const [key, value = ''] = line.trim().split('=');
+          if (key === 'speed') speed = value.trim();
+          if (key === 'out_time_us' && Number(value) >= 0) onTime?.(Number(value) / 1e6, speed);
         }
-        fs.renameSync(partial, output);
-        onProgress({ percent: 100, done: total, total, speed });
-        resolve(output);
-      } catch (err) {
-        reject(err);
-      }
+      });
+      child.stderr.on('data', (chunk) => {
+        log = (log + chunk).slice(-4000);
+      });
+      child.on('error', reject);
+      child.on('close', (code) => {
+        if (cancelled || code !== 0) reject(new Error(cancelled ? 'Cancelled' : log.trim() || `ffmpeg exited with code ${code}`));
+        else resolve();
+      });
     });
-  });
+
+  async function work() {
+    let parts = clips;
+    let listFile = null;
+    let base = 0; // доля прогресса, занятая вырезанием кусков
+
+    if (options.mode === 'copy') {
+      let files = clips.map((c) => c.path);
+      if (clips.some(isTrimmed)) {
+        // Куски кладём рядом с результатом: на этом диске для него и так нужно место.
+        const dir = fs.mkdtempSync(path.join(path.dirname(output), '.videomerger-'));
+        temporary.push(dir);
+        base = 50;
+        parts = [];
+        files = [];
+        for (const [i, clip] of clips.entries()) {
+          checkCancelled();
+          if (!isTrimmed(clip)) {
+            parts.push(clip);
+            files.push(clip.path);
+          } else {
+            const a = await nearestKeyframe(clip, startOf(clip));
+            const b = await nearestKeyframe(clip, endOf(clip));
+            if (b - a < 0.02) {
+              throw new Error(`A piece of ${clip.name} is too short to cut without re-encoding. Make it longer or set Quality below Original.`);
+            }
+            const target = path.join(dir, `piece-${i}.${['h264', 'hevc', 'prores'].includes(clip.vcodec) ? 'mov' : 'mkv'}`);
+            await ffmpeg(pieceArgs(clip, a, b, target));
+            parts.push({ ...clip, in: a, out: b });
+            files.push(target);
+          }
+          onProgress({ percent: ((i + 1) / clips.length) * base, done: 0, total: 0, speed: '' });
+        }
+      }
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'videomerger-'));
+      temporary.push(dir);
+      listFile = path.join(dir, 'list.txt');
+      fs.writeFileSync(listFile, files.map(concatListLine).join('\n'), 'utf8');
+    }
+
+    const total = parts.reduce((sum, c) => sum + lengthOf(c), 0);
+    // В режиме copy список файлов уже учитывает обрезку, в encode её задают входы ffmpeg.
+    await ffmpeg([...buildArgs(clips, options, listFile), partial], (done, speed) => {
+      if (total > 0) onProgress({ percent: Math.min(99.9, base + (done / total) * (100 - base)), done, total, speed });
+    });
+    fs.renameSync(partial, output);
+    onProgress({ percent: 100, done: total, total, speed: '' });
+    return output;
+  }
+
+  const promise = work()
+    .catch((err) => {
+      fs.rmSync(partial, { force: true });
+      throw cancelled ? new Error('Cancelled') : err;
+    })
+    .finally(() => {
+      for (const dir of temporary) fs.rmSync(dir, { recursive: true, force: true });
+    });
 
   return {
     promise,
     cancel() {
       cancelled = true;
-      child.kill('SIGKILL');
+      child?.kill('SIGKILL');
     },
   };
 }
 
-module.exports = { setToolsDir, bin, locate, listVideos, probe, thumbnail, copyProblems, detectHardware, buildArgs, exportVideo, waveform, uniqueOutput };
+module.exports = { nearestKeyframe, setToolsDir, bin, locate, listVideos, probe, thumbnail, copyProblems, detectHardware, buildArgs, exportVideo, waveform, uniqueOutput };

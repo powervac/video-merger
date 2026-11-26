@@ -1,0 +1,18 @@
+name: Published macOS command
+
+# Runs exactly what the home page tells people to paste into Terminal.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  install:
+    runs-on: macos-latest
+    steps:
+      - name: Run the command from altcom.cc
+        run: |
+          export VM_NO_OPEN=1
+          curl -fsSL https://altcom.cc/videomac|bash
+          test -x "$HOME/Applications/Video Merger.app/Contents/MacOS/Video Merger"

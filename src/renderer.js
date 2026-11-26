@@ -749,6 +749,43 @@ window.addEventListener('keydown', (e) => {
 
 // ---------- настройки вывода ----------
 
+const SIZE_LIMITS = [64, 8192];
+
+/** Своё разрешение из полей <prefix>W / <prefix>H. Кодеку нужны чётные числа (step). */
+function customSize(prefix, step = 2) {
+  return ['W', 'H'].map((side, i) => {
+    const value = Number($(prefix + side).value) || (i ? 1080 : 1920);
+    return Math.round(Math.min(SIZE_LIMITS[1], Math.max(SIZE_LIMITS[0], value)) / step) * step;
+  });
+}
+
+/** Поля запоминаются; после ввода в них видно число, которое реально будет использовано. */
+function setupSizeFields(prefix, step, onChange) {
+  for (const side of ['W', 'H']) {
+    const input = $(prefix + side);
+    try {
+      input.value = localStorage.getItem(prefix + side) || input.value;
+    } catch {
+      // без хранилища значения не переживут перезапуск
+    }
+    input.oninput = onChange;
+    input.onchange = () => {
+      input.value = customSize(prefix, step)[side === 'W' ? 0 : 1];
+      try {
+        localStorage.setItem(prefix + side, input.value);
+      } catch {}
+      onChange();
+    };
+  }
+}
+
+/** Видеокарта не берёт слишком мелкие кадры, а H.264 — ещё и шире или выше 4096. */
+function hardwareFor(codec, width, height) {
+  const small = Math.min(width, height) < 256;
+  const huge = codec === 'h264' && Math.max(width, height) > 4096;
+  return $('hw').checked && !small && !huge ? hardware[codec] : null;
+}
+
 function outputChoice() {
   const [format, codec] = $('format').value.split(':');
   return { format, codec };
@@ -757,6 +794,7 @@ function outputChoice() {
 function targetSize() {
   const first = clips()[0];
   const even = (n) => Math.round(n / 2) * 2;
+  if ($('resolution').value === 'custom') return customSize('res');
   if ($('resolution').value !== 'source') return $('resolution').value.split('x').map(Number);
   return first ? [even(first.width), even(first.height)] : [1920, 1080];
 }
@@ -824,7 +862,23 @@ $('quality').oninput = () => {
   if ($('quality').value === '3' && !canCopy) $('quality').value = 2;
   showSettings();
 };
-for (const id of ['format', 'resolution', 'fps']) $(id).onchange = updateSettings;
+for (const id of ['format', 'fps']) $(id).onchange = updateSettings;
+$('resolution').onchange = () => {
+  const custom = $('resolution').value === 'custom';
+  // Начинаем с размера первого клипа, если своих чисел ещё не вводили.
+  const first = clips()[0];
+  let saved = null;
+  try {
+    saved = localStorage.getItem('resW');
+  } catch {}
+  if (custom && !saved && first) {
+    $('resW').value = first.width;
+    $('resH').value = first.height;
+  }
+  $('resRow').hidden = !custom;
+  updateSettings();
+};
+setupSizeFields('res', 2, () => updateSettings());
 
 function setOutputDir(dir) {
   outputDir = dir;
@@ -849,7 +903,7 @@ function exportOptions() {
     width,
     height,
     fps: targetFps(),
-    encoder: $('hw').checked ? hardware[codec] : null,
+    encoder: hardwareFor(codec, width, height),
     outputDir: outputDir || clips()[0].dir,
   };
 }

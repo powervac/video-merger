@@ -137,8 +137,16 @@
                   <option value="1280x720">1280×720 (HD)</option>
                   <option value="1080x1920">1080×1920 (Reels, Shorts)</option>
                   <option value="1080x1350">1080×1350 (Instagram feed)</option>
+                  <option value="custom">Custom…</option>
                 </select>
               </div>
+            <div class="row" id="resRow" hidden><label for="resW">Width × Height:</label>
+              <div class="size">
+                <input id="resW" type="number" min="64" max="8192" step="2" value="1920" aria-label="Width">
+                <span>×</span>
+                <input id="resH" type="number" min="64" max="8192" step="2" value="1080" aria-label="Height">
+              </div>
+            </div>
               <div class="row">
                 <label for="fps">Frame Rate:</label>
                 <select id="fps">
@@ -246,6 +254,13 @@
             </div>
             <div class="row"><label for="sbsSize">Frame:</label>
               <select id="sbsSize"></select>
+            </div>
+            <div class="row" id="sbsResRow" hidden><label for="sbsResW">Width × Height:</label>
+              <div class="size">
+                <input id="sbsResW" type="number" min="64" max="8192" step="2" value="1920" aria-label="Width">
+                <span>×</span>
+                <input id="sbsResH" type="number" min="64" max="8192" step="2" value="1080" aria-label="Height">
+              </div>
             </div>
             <div class="row"><label for="sbsFit">Picture:</label>
               <select id="sbsFit">

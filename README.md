@@ -29,7 +29,7 @@ Drag the dividers to resize the preview and the timeline (double-click resets th
    or drag the edges of a clip. Undo with Ctrl+Z (Cmd+Z). Zoom with Ctrl + mouse wheel; arrows step by one frame.
 4. If horizontal and vertical videos are mixed, the app warns you. The **Horizontal** / **Vertical** filter
    shows and merges only that kind.
-5. Choose format, resolution, frame rate, quality and output folder, then press **Render Video** and give the file a name.
+5. Choose format, resolution (a preset or **Custom** width × height), frame rate, quality and output folder, then press **Render Video** and give the file a name.
 
 Quality **Original** joins without re-encoding. It is available when the clips have the same parameters and
 resolution and frame rate are Keep Original. Cuts then move to the nearest keyframe; with High, Medium or Small

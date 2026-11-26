@@ -185,6 +185,9 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 17p
 .row { display: grid; grid-template-columns: 38% 1fr; align-items: center; min-height: 36px; }
 .row label { color: #c9d0de; }
 select { width: 100%; height: 36px; padding: 0 12px; background: var(--field); border: 1px solid var(--line); border-radius: 7px; }
+.size { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.size input { flex: 1; min-width: 0; width: 0; height: 36px; padding: 0 12px; font: inherit; color: inherit; background: var(--field); border: 1px solid var(--line); border-radius: 7px; user-select: text; }
+.size input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 .withicon { position: relative; }
 .withicon > svg { position: absolute; left: 14px; top: 8px; width: 20px; height: 20px; pointer-events: none; }
 .withicon select { padding-left: 48px; }
@@ -308,7 +311,7 @@ pre { max-height: 180px; overflow: auto; margin: 0; white-space: pre-wrap; user-
   .splitter.horizontal { height: 10px; }
   .output { gap: 4px; padding-block: 8px; }
   .row { min-height: 30px; }
-  select, .path { height: 30px; }
+  select, .path, .size input { height: 30px; }
   .withicon > svg { top: 5px; }
   .folder button { padding-block: 3px; }
   .item { height: 76px; }

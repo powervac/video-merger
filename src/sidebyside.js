@@ -68,9 +68,14 @@
     }
   }
 
+  // Половины должны быть чётными, поэтому своё разрешение кратно четырём.
+  const frameSize = () => ($('sbsSize').value === 'custom' ? customSize('sbsRes', 4) : $('sbsSize').value.split('x').map(Number));
+
   function applyLayout() {
     const { names, want, sizes } = layout();
-    $('sbsSize').replaceChildren(...sizes.map(([value, text]) => new Option(text, value)));
+    const custom = $('sbsSize').value === 'custom';
+    $('sbsSize').replaceChildren(...sizes.map(([value, text]) => new Option(text, value)), new Option('Custom…', 'custom'));
+    if (custom) $('sbsSize').value = 'custom';
     slots.forEach((slot, i) => {
       slot.querySelector('.slot-empty b').textContent = `${names[i]} video`;
       slot.querySelector('.slot-empty span').textContent = `Drop a ${want} video here or click`;
@@ -166,7 +171,8 @@
 
   /** Просмотр повторяет будущий кадр: те же пропорции, раскладка и заполнение половин. */
   function applyShape() {
-    const [width, height] = $('sbsSize').value.split('x').map(Number);
+    $('sbsResRow').hidden = $('sbsSize').value !== 'custom';
+    const [width, height] = frameSize();
     const box = document.querySelector('.sbs-frame');
     box.style.setProperty('--sbs-ratio', width / height);
     box.classList.toggle('fill', $('sbsFit').value === 'fill');
@@ -263,7 +269,7 @@
     if (asking || !chosen[0] || !chosen[1]) return;
     stop();
     const [format, codec] = $('sbsFormat').value.split(':');
-    const [width, height] = $('sbsSize').value.split('x').map(Number);
+    const [width, height] = frameSize();
     const options = {
       mode: 'sidebyside',
       direction: $('sbsLayout').value,
@@ -276,7 +282,7 @@
       quality: $('sbsQuality').value,
       audio: $('sbsAudio').value,
       fit: $('sbsFit').value,
-      encoder: $('hw').checked ? hardware[codec] : null,
+      encoder: hardwareFor(codec, width, height),
     };
     asking = true;
     let output;
@@ -304,6 +310,9 @@
     }
   };
 
+  $('sbsResW').value = 1080;
+  $('sbsResH').value = 1080;
+  setupSizeFields('sbsRes', 4, () => applyShape());
   applyLayout();
   refresh();
 })();

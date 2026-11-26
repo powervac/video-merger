@@ -995,6 +995,13 @@ for (const button of document.querySelectorAll('nav button')) {
     for (const view of document.querySelectorAll('.view')) view.hidden = view.id !== `view-${button.dataset.view}`;
   };
 }
+// Ссылки открываются в обычном браузере, а не внутри приложения.
+for (const a of document.querySelectorAll('a[data-link]')) {
+  a.onclick = (e) => {
+    e.preventDefault();
+    window.api.openLink(a.href);
+  };
+}
 for (const button of document.querySelectorAll('[data-win]')) button.onclick = () => window.api.window(button.dataset.win);
 
 update();

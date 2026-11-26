@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld('api', {
   exportVideo: call('export'),
   cancelExport: call('cancel-export'),
   showInFolder: call('show-in-folder'),
+  openLink: call('open-link'),
   pathForFile: (file) => webUtils.getPathForFile(file),
   onProgress: (cb) => ipcRenderer.on('progress', (_e, p) => cb(p)),
 });

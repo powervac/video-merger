@@ -164,6 +164,11 @@ ipcMain.handle('export', async (_e, clips, options) => {
 });
 
 ipcMain.handle('cancel-export', () => job?.cancel());
+// Открываем в браузере только свои адреса.
+ipcMain.handle('open-link', (_e, url) => {
+  if (/^https:\/\/(altcom\.cc|github\.com\/powervac)([/#]|$)/.test(String(url))) return shell.openExternal(url);
+});
+
 ipcMain.handle('show-in-folder', (_e, file) => shell.showItemInFolder(file));
 
 app.whenReady().then(() => {

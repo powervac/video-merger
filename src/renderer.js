@@ -20,7 +20,7 @@ let nextId = 1;
 const peaksByPath = new Map();
 
 const MIN_PIECE = 0.1; // секунд
-const GAP = 40; // ширина стрелки между клипами
+const GAP = 2; // черта между соседними клипами
 const MIN_WIDTH = 90;
 const QUALITY = [
   { key: 'small', name: 'Small' },
@@ -381,7 +381,7 @@ function renderTimeline() {
   scale = pixelsPerSecond();
   const nodes = [];
   clips().forEach((clip, i) => {
-    if (i) nodes.push(el('div', 'gap', '➜'));
+    if (i) nodes.push(el('div', 'gap'));
     const node = el('div', `clip${clip === selected ? ' selected' : ''}`);
     node.title = `${clip.path}\n${precise(clip.in)} – ${precise(clip.out)}`;
     const text = el('div', 'label');
@@ -877,20 +877,42 @@ window.api.onProgress(({ percent, done, total, speed }) => {
   $('jobInfo').textContent = `${percent.toFixed(0)}%${detail}${speed && speed !== 'N/A' ? ` · speed ${speed}` : ''}`;
 });
 
+// Отдельная функция, чтобы автотест мог задать имя без системного окна.
+async function askOutput(options) {
+  return window.api.chooseOutput(clips()[0].name, options.outputDir, options.format);
+}
+
+let asking = false;
 $('merge').onclick = async () => {
+  if (asking) return;
   video.pause();
-  if (mixed() && !window.confirm('Horizontal and vertical videos are mixed: some will get black bars.\nMerge anyway?')) return;
-  lastOutput = null;
-  openDialog('Merging…');
+  if (mixed() && !window.confirm('Horizontal and vertical videos are mixed: some will get black bars.\nRender anyway?')) return;
+  const options = exportOptions();
+  asking = true;
+  let output;
   try {
-    const result = await window.api.exportVideo(plain(clips()), exportOptions());
+    output = await askOutput(options);
+  } catch (err) {
+    showError('Render failed', err.message);
+    return;
+  } finally {
+    asking = false;
+  }
+  if (!output) return;
+  // Выбранная в окне папка становится папкой вывода.
+  const folder = output.replace(/[\\/][^\\/]*$/, '');
+  if (folder !== options.outputDir) setOutputDir(folder);
+  lastOutput = null;
+  openDialog('Rendering…');
+  try {
+    const result = await window.api.exportVideo(plain(clips()), { ...options, output });
     lastOutput = result.output;
     $('jobInfo').textContent = result.output;
     finishDialog('Done');
   } catch (err) {
     const message = err.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, '');
     if (message === 'Cancelled') $('overlay').hidden = true;
-    else showError('Merge failed', message);
+    else showError('Render failed', message);
   }
 };
 $('cancel').onclick = () => window.api.cancelExport();

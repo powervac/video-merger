@@ -82,12 +82,24 @@ nav button svg { width: 38px; height: 38px; }
 nav button.active { background: linear-gradient(160deg, var(--accent), var(--accent-dark)); color: #fff; }
 .content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .view { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-#view-merge { padding: 14px 18px 14px; gap: 12px; }
+#view-merge { padding: 14px 18px 14px; gap: 0; }
+.actionbar { margin-top: 12px; }
 
 /* ---------- верх: файлы и настройки ---------- */
-.top { flex: 1; min-height: 0; display: flex; gap: 26px; }
+.top { flex: 1; min-height: 0; display: flex; }
 .left { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
-.right { width: clamp(380px, 38vw, 562px); flex: none; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.right { width: var(--right-width, clamp(380px, 38vw, 562px)); max-width: calc(100% - 420px); flex: none; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+
+/* ---------- разделители ---------- */
+.splitter { flex: none; position: relative; touch-action: none; outline: none; }
+.splitter::after { content: ""; position: absolute; left: 50%; top: 50%; translate: -50% -50%; border-radius: 3px; background: var(--line); }
+.splitter:hover::after, .splitter:focus-visible::after, .splitter.active::after { background: var(--accent); }
+.splitter.vertical { width: 22px; cursor: col-resize; }
+.splitter.vertical::after { width: 4px; height: 64px; }
+.splitter.horizontal { height: 14px; cursor: row-resize; }
+.splitter.horizontal::after { width: 64px; height: 4px; }
+body.resizing-x, body.resizing-x * { cursor: col-resize !important; }
+body.resizing-y, body.resizing-y * { cursor: row-resize !important; }
 
 #dropzone {
   flex: none;
@@ -150,7 +162,7 @@ button.link { padding: 4px 0; margin-top: 4px; color: #6aa9ff; font-size: 14px; 
 .item .remove svg { width: 22px; height: 22px; }
 
 /* ---------- плеер ---------- */
-.player { flex: 1 1 0; min-height: 150px; display: flex; flex-direction: column; background: var(--panel); border-radius: 8px; overflow: hidden; }
+.player { flex: 0 1 calc(var(--right-width, 480px) * 0.5625 + 48px); min-height: 150px; display: flex; flex-direction: column; background: var(--panel); border-radius: 8px; overflow: hidden; }
 .screen { flex: 1; min-height: 0; position: relative; background: #0d1016; }
 #video { width: 100%; height: 100%; object-fit: contain; display: block; }
 #playerNote { position: absolute; left: 10px; right: 10px; bottom: 8px; text-align: center; color: var(--muted); pointer-events: none; }
@@ -167,7 +179,8 @@ input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius:
 input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 17px; height: 17px; margin-top: -5.5px; border-radius: 50%; background: var(--accent); }
 
 /* ---------- настройки вывода ---------- */
-.output { flex: none; padding: 14px 18px 12px; display: flex; flex-direction: column; gap: 8px; }
+.output { flex: 1 1000 auto; min-height: 140px; overflow-y: auto; padding: 14px 18px 12px; display: flex; flex-direction: column; gap: 8px; }
+.output > * { flex-shrink: 0; }
 .row { display: grid; grid-template-columns: 38% 1fr; align-items: center; min-height: 36px; }
 .row label { color: #c9d0de; }
 select { width: 100%; height: 36px; padding: 0 12px; background: var(--field); border: 1px solid var(--line); border-radius: 7px; }
@@ -198,28 +211,28 @@ select { width: 100%; height: 36px; padding: 0 12px; background: var(--field); b
 .trackicons { width: 66px; flex: none; display: flex; flex-direction: column; color: var(--muted); }
 .trackicons div { display: grid; place-items: center; }
 .trackicons div:first-child { height: 22px; }
-.trackicons .v { height: 90px; background: var(--card); }
+.trackicons .v { height: var(--track-height, 90px); background: var(--card); }
 .trackicons .a { height: 48px; margin-top: 4px; background: var(--card); }
 .trackicons svg { width: 28px; height: 28px; }
 #scroller { flex: 1; min-width: 0; margin-left: 12px; overflow-x: auto; overflow-y: hidden; }
 #tracks { position: relative; min-width: 100%; width: max-content; }
 #ruler { display: block; position: sticky; left: 0; height: 22px; cursor: pointer; }
-#videoTrack { display: flex; height: 90px; padding: 3px 0; background: var(--card); min-width: 100%; }
+#videoTrack { display: flex; height: var(--track-height, 90px); padding: 3px 0; background: var(--card); min-width: 100%; }
 #videoTrack:empty::after { content: "Add videos to start"; margin: auto; color: var(--muted); }
 #audioTrack { display: block; position: sticky; left: 0; height: 48px; margin-top: 4px; cursor: pointer; }
-.clip { position: relative; flex: none; display: flex; align-items: center; gap: 18px; height: 84px; padding: 0 6px; overflow: hidden; background: var(--field); border: 2px solid var(--line); border-radius: 6px; cursor: grab; }
+.clip { position: relative; flex: none; display: flex; align-items: center; gap: 18px; height: calc(var(--track-height, 90px) - 6px); padding: 0 6px; overflow: hidden; background: var(--field); border: 2px solid var(--line); border-radius: 0; cursor: grab; }
 .clip.selected { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
-.clip .thumb { width: 100px; height: 72px; pointer-events: none; }
+.clip .thumb { width: 100px; height: min(120px, calc(100% - 12px)); pointer-events: none; }
 .clip .label { min-width: 0; overflow: hidden; }
 .clip .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; }
 .clip.narrow { gap: 0; padding: 0 12px; }
 .clip.narrow .thumb { display: none; }
-.handle { position: absolute; top: 0; bottom: 0; width: 9px; cursor: ew-resize; background: rgba(255, 255, 255, .14); touch-action: none; }
+.handle { position: absolute; top: 0; bottom: 0; width: 7px; cursor: ew-resize; background: transparent; touch-action: none; }
 .handle.left { left: 0; }
 .handle.right { right: 0; }
 .handle:hover, .clip.selected .handle { background: #ffd54a; }
-.clip .time { font-size: 14px; margin-top: 8px; }
-.gap { flex: none; width: 40px; display: grid; place-items: center; color: var(--muted); }
+.clip .time { font-size: 14px; margin-top: min(8px, calc((var(--track-height, 90px) - 54px) / 4)); }
+.gap { flex: none; width: 2px; align-self: stretch; margin-block: -3px; background: #fff; opacity: .75; }
 .clip.before { border-left-color: #fff; }
 .clip.after { border-right-color: #fff; }
 #playhead { position: absolute; top: 2px; bottom: 0; width: 2px; margin-left: -1px; background: #fff; pointer-events: none; }
@@ -243,6 +256,20 @@ progress { width: 100%; height: 12px; accent-color: var(--accent); }
 pre { max-height: 180px; overflow: auto; margin: 0; white-space: pre-wrap; user-select: text; color: var(--bad); font-size: 12px; }
 .actions { display: flex; justify-content: flex-end; gap: 8px; }
 
+/* ---------- узкая левая колонка ---------- */
+.left { container-type: inline-size; }
+@container (max-width: 620px) {
+  #dropzone { gap: 18px; padding: 0 12px; text-align: left; }
+  .dropicon { width: 80px; }
+  .droptitle { font-size: 21px; }
+  .dropsub { font-size: 15px; }
+  .item { gap: 12px; padding: 0 12px; }
+  .item .thumb { width: 80px; height: 52px; }
+  .item .name { font-size: 15px; }
+  .item .meta { font-size: 12.5px; }
+  .pill { padding: 4px 9px; font-size: 13px; }
+}
+
 /* ---------- невысокие экраны ---------- */
 @media (max-height: 900px) {
   .titlebar { height: 44px; }
@@ -250,7 +277,9 @@ pre { max-height: 180px; overflow: auto; margin: 0; white-space: pre-wrap; user-
   nav { gap: 10px; padding-top: 12px; }
   nav button { height: 84px; }
   nav button svg { width: 30px; height: 30px; }
-  #view-merge { gap: 8px; padding-block: 10px; }
+  #view-merge { padding-block: 10px; }
+  .actionbar { margin-top: 8px; }
+  .splitter.horizontal { height: 10px; }
   .output { gap: 4px; padding-block: 8px; }
   .row { min-height: 30px; }
   select, .path { height: 30px; }
@@ -259,9 +288,9 @@ pre { max-height: 180px; overflow: auto; margin: 0; white-space: pre-wrap; user-
   .item { height: 76px; }
   .thumb { height: 56px; width: 94px; }
   .tlhead { height: 36px; }
-  .trackicons .v, #videoTrack { height: 70px; }
-  .clip { height: 64px; }
-  .clip .thumb { height: 52px; width: 80px; }
+  .trackicons .v, #videoTrack { height: var(--track-height, 70px); }
+  .clip { height: calc(var(--track-height, 70px) - 6px); }
+  .clip .thumb { width: 80px; }
   .clip .time { margin-top: 2px; }
   .trackicons .a, #audioTrack { height: 36px; }
   #merge { height: 46px; font-size: 18px; width: 260px; }

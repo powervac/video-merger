@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('api', {
   waveform: call('waveform'),
   copyProblems: call('copy-problems'),
   detectHardware: call('detect-hardware'),
+  chooseOutput: call('choose-output'),
   exportVideo: call('export'),
   cancelExport: call('cancel-export'),
   showInFolder: call('show-in-folder'),

@@ -90,6 +90,9 @@
             <div id="list"></div>
           </div>
 
+          <div id="splitSide" class="splitter vertical" tabindex="0" role="separator" aria-orientation="vertical"
+               title="Drag to resize the preview. Double-click to reset."></div>
+
           <div class="right">
             <div class="player" id="playerBox">
               <div class="screen">
@@ -163,6 +166,9 @@
           </div>
         </div>
 
+        <div id="splitTimeline" class="splitter horizontal" tabindex="0" role="separator" aria-orientation="horizontal"
+             title="Drag to resize the timeline. Double-click to reset."></div>
+
         <div class="panel timeline">
           <div class="tlhead">
             <svg class="layers"><use href="#i-layers"/></svg>
@@ -196,7 +202,7 @@
         </div>
 
         <div class="actionbar">
-          <button id="merge" disabled><svg><use href="#i-play"/></svg>Merge Videos</button>
+          <button id="merge" disabled><svg><use href="#i-play"/></svg>Render Video</button>
         </div>
       </section>
 
@@ -216,7 +222,7 @@
         <h1>Video Merger</h1>
         <div class="panel">
           <p>Joins video files into one. Version <span id="version"></span>.</p>
-          <p class="muted">Add files or a folder, arrange them on the timeline, press Merge Videos. With Quality set to Original the picture is copied without re-encoding.</p>
+          <p class="muted">Add files or a folder, arrange them on the timeline, press Render Video. With Quality set to Original the picture is copied without re-encoding.</p>
           <p class="muted">Powered by FFmpeg and Electron.</p>
         </div>
       </section>
@@ -225,7 +231,7 @@
 
   <div id="overlay" hidden>
     <div class="dialog">
-      <h2 id="jobTitle">Merging…</h2>
+      <h2 id="jobTitle">Rendering…</h2>
       <progress id="progress" max="100" value="0"></progress>
       <div id="jobInfo" class="muted selectable"></div>
       <pre id="jobError" hidden></pre>
@@ -249,5 +255,6 @@
   </div>
 
   <script src="renderer.js"></script>
+  <script src="layout.js"></script>
 </body>
 </html>

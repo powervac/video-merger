@@ -35,8 +35,8 @@ function createWindow() {
     if (!job) return;
     const choice = dialog.showMessageBoxSync(win, {
       type: 'warning',
-      message: 'A merge is in progress. Stop it and close the app?',
-      buttons: ['Keep merging', 'Stop and close'],
+      message: 'Rendering is in progress. Stop it and close the app?',
+      buttons: ['Keep rendering', 'Stop and close'],
       cancelId: 0,
       defaultId: 0,
     });
@@ -129,10 +129,26 @@ ipcMain.handle('detect-hardware', () => {
   return hardware;
 });
 
+/** Спрашивает имя файла для результата; null — пользователь передумал. */
+ipcMain.handle('choose-output', async (_e, firstName, dir, format) => {
+  const r = await dialog.showSaveDialog(win, {
+    title: 'Save video as',
+    buttonLabel: 'Render',
+    // Предлагаем свободное имя; заменить существующий файл можно только подтвердив это в диалоге.
+    defaultPath: media.uniqueOutput(dir, `${path.parse(firstName).name}_merged`, format),
+    filters: [{ name: `${format.toUpperCase()} video`, extensions: [format] }],
+    properties: ['showOverwriteConfirmation', 'createDirectory'],
+  });
+  if (r.canceled || !r.filePath) return null;
+  if (path.extname(r.filePath).toLowerCase() === `.${format}`) return r.filePath;
+  // Расширение дописываем сами — про такой файл диалог не спрашивал, поэтому не затираем.
+  return media.uniqueOutput(path.dirname(r.filePath), path.basename(r.filePath), format);
+});
+
 ipcMain.handle('export', async (_e, clips, options) => {
-  if (job) throw new Error('A merge is already running');
-  fs.mkdirSync(options.outputDir, { recursive: true });
-  const output = media.uniqueOutput(options.outputDir, `${path.parse(clips[0].name).name}_merged`, options.format);
+  if (job) throw new Error('Rendering is already running');
+  const { output } = options;
+  fs.mkdirSync(path.dirname(output), { recursive: true });
   job = media.exportVideo(clips, options, output, (p) => {
     if (win.isDestroyed()) return;
     win.webContents.send('progress', p);

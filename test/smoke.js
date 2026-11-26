@@ -74,6 +74,8 @@ async function main() {
     for (const resolution of ['source', '1280x720']) {
       await js(`$('resolution').value = '${resolution}'; $('resolution').onchange()`);
       await sleep(500);
+      // Системное окно «Сохранить как» в автотесте заменяем заданным именем.
+      await js(`askOutput = async () => ${JSON.stringify(path.join(out, `result-${resolution}.mp4`))}`);
       await js(`$('merge').click()`);
       await until(`!$('done').hidden`, 120, `merge ${resolution}`);
       const result = await js(`$('jobTitle').textContent + ($('jobError').hidden ? '' : ': ' + $('jobError').textContent)`);

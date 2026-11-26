@@ -1,35 +1,51 @@
-# VideoGlue
+# Video Merger
 
-Склейка видео из папки в один файл. Windows и macOS.
+Join video files into one: drag and drop, arrange on a timeline, export. Windows and macOS.
 
-## Запуск
+Home page: https://altcom.cc/video-merger.html
 
-Нужен [Node.js](https://nodejs.org). Всё остальное ставится само.
+## Windows
 
-- **Windows:** двойной клик по `start.bat`.
-- **macOS:** один раз `chmod +x start.command`, дальше двойной клик по нему.
+Download [VideoMergerPortable.exe](https://altcom.cc/downloads/VideoMergerPortable.exe). Nothing to install.
 
-То же вручную: `npm install`, затем `npm start`. При копировании на другой компьютер
-папку `node_modules` не берите: бинарники в ней зависят от системы.
+## macOS: build from source
 
-## Как пользоваться
+Paste into Terminal:
 
-1. Перетащите файлы или папку в верхнюю зону (или клик по ней; «Add a whole folder» — выбрать папку).
-2. Порядок меняется перетаскиванием в списке или на таймлайне, `×` убирает клип.
-3. Справа выберите формат, разрешение, частоту кадров, качество и папку, нажмите «Merge Videos».
+```sh
+curl -fsSL https://altcom.cc/videomac | bash
+```
 
-Качество **Original** — склейка без перекодирования; доступно, когда параметры клипов совпадают,
-а разрешение и частота кадров — Keep Original. Существующие файлы не перезаписываются.
+It runs [build-mac.sh](build-mac.sh), which builds the app on your Mac and puts it into `~/Applications`.
+If Node.js is missing, a temporary copy is used and removed afterwards. Run the command again to update.
 
-## ffmpeg
+## How to use
 
-Берётся из переменных `FFMPEG_PATH` / `FFPROBE_PATH`, затем из системы,
-затем из пакетов `ffmpeg-static` / `ffprobe-static`, затем из папки приложения в профиле пользователя.
-Перед каждым `npm start` скрипт `scripts/check-deps.js` проверяет, что FFmpeg запускается,
-и докачивает его, если нет. Собранный portable `.exe` FFmpeg не содержит: если в системе его нет,
-при первом запуске он сам скачивает его (ffmpeg-static b6.1.1, с проверкой SHA-256).
+1. Drop files or a folder onto the top area (or click it).
+2. Drag to change the order in the list or on the timeline; `×` removes a clip.
+3. Choose format, resolution, frame rate, quality and output folder, then press **Merge Videos**.
 
-## Сборка приложения
+Quality **Original** joins without re-encoding. It is available when the clips have the same
+parameters and resolution and frame rate are set to Keep Original. Existing files are never overwritten.
 
-`npm run dist` — результат в `dist/`. Собирать нужно на той системе, для которой приложение:
-ffmpeg скачивается под текущую платформу.
+## FFmpeg
+
+Looked up in this order: `FFMPEG_PATH` / `FFPROBE_PATH`, the system, the npm packages (development only),
+the copy downloaded by the app. If there is none, the app downloads it on the first start
+([ffmpeg-static b6.1.1](https://github.com/eugeneware/ffmpeg-static/releases/tag/b6.1.1), SHA-256 checked).
+FFmpeg is a separate program under the GPL.
+
+## Development
+
+Needs Node.js.
+
+```
+npm install
+npm start
+```
+
+On Windows you can double-click `start.bat`. `npm run dist` builds the portable exe into `dist/`.
+
+## Licence
+
+[MIT](LICENSE)

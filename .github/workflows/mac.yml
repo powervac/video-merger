@@ -1,0 +1,40 @@
+name: Build on macOS
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['src/**', 'build-mac.sh', 'package*.json', 'test/**', '.github/workflows/mac.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-latest, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build with build-mac.sh
+        run: VM_SOURCE="$PWD" VM_NO_OPEN=1 bash build-mac.sh
+      - name: Smoke test (first start and two merges)
+        run: |
+          # Hide any Homebrew FFmpeg so that the first-start download is exercised.
+          for tool in ffmpeg ffprobe; do
+            for dir in /opt/homebrew/bin /usr/local/bin; do
+              if [ -e "$dir/$tool" ]; then sudo mv "$dir/$tool" "$dir/$tool.hidden"; fi
+            done
+          done
+          node test/smoke.js "$HOME/Applications/Video Merger.app/Contents/MacOS/Video Merger"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshot-${{ matrix.runner }}
+          path: smoke-shots/
+          if-no-files-found: ignore

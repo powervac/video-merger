@@ -16,6 +16,14 @@ const TOOLS = {
     ffmpeg: { size: 82797568, sha256: '04e1307997530f9cf2fe35cba2ca7e8875ca91da02f89d6c7243df819c94ad00' },
     ffprobe: { size: 82668032, sha256: '3a7e2dc003dc2cd1472827e4c7c4f056ae1ae0ae7c5bbc580c99b49827351ba4' },
   },
+  'darwin-arm64': {
+    ffmpeg: { size: 45568216, sha256: 'a90e3db6a3fd35f6074b013f948b1aa45b31c6375489d39e572bea3f18336584' },
+    ffprobe: { size: 45528808, sha256: 'bb2db6f5d8cef919da12fbf592119a987202a8c060a886f3cab091f9cab90b64' },
+  },
+  'darwin-x64': {
+    ffmpeg: { size: 78862176, sha256: 'ebdddc936f61e14049a2d4b549a412b8a40deeff6540e58a9f2a2da9e6b18894' },
+    ffprobe: { size: 78780408, sha256: 'fa3add0ce901f7241abe0dfc0155d958fc834aca3f8ce61f87cc712ae669c1e0' },
+  },
 };
 
 const fileName = (name) => (process.platform === 'win32' ? `${name}.exe` : name);
